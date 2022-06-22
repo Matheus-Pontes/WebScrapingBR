@@ -1,0 +1,2042 @@
+(function () {
+    var app = angular.module('angular-util', ["ui.bootstrap", "ngSanitize"], function ($httpProvider) {
+        // ** JPM - o código abaixo é para fazer os $http.post() sempre enviarem os dados como formData (como o $.ajax())
+
+        // Use x-www-form-urlencoded Content-Type
+        //$httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8';
+        $httpProvider.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
+        // Override $http service's default transformRequest
+        $httpProvider.defaults.transformRequest = [function (data) {
+            return angular.isObject(data) && String(data) !== '[object File]' ? angularUtil.ConvertAngularPostFormData(data) : data;
+        }];
+
+        $httpProvider.useApplyAsync(true);
+    });
+
+    app.config(function ($httpProvider) {
+        $httpProvider.interceptors.push('httpInterceptor');
+    }).factory('httpInterceptor', function ($q) {
+        return {
+            request: function (config) {
+                if (config.url != "/Plataforma/VerificarSessao")
+                    $('#pleaseWaitDialog').modal('show');
+
+                return config || $q.when(config)
+            },
+            response: function (response) {
+                if (response.config.url != "/Plataforma/VerificarSessao")
+                    $('#pleaseWaitDialog').modal('hide');
+
+                return response || $q.when(response);
+            },
+            responseError: function (response) {
+                $('#pleaseWaitDialog').modal('hide');
+                return $q.reject(response);
+            }
+        };
+    });
+
+    // ** aqui devem ser definidos os serviços e diretivas que serão compartilhados por várias rotinas no SafetyChem.
+
+    // ** JPM - Rotina que faz o post de objetos complexos no controller
+    app.service('postComplexDataService', ['$http', function ($http) {
+        this.postComplexData = function (address, postDataParam) {
+            var postData = JSON.stringify(postDataParam);
+
+            var promise = $http.post(
+                address,
+                postData,
+                { headers: { 'Content-Type': 'application/json' } }
+            ).then(function (response) {
+                return response;
+            }, function (response) {
+                return response;
+            });
+            return promise;
+        };
+
+    }]);
+
+    // ** serviço para gerar certificado
+    app.service('servCertificado', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService, postComplexDataService) {
+
+        this.GerarCertificadoTreinamento = function (model) {
+            return postComplexDataService.postComplexData(
+                '/NewSafetyChem/Treinamento/GerarCertificadoTreinamento',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+
+    }]);
+
+    // ** serviço para trazer comunicado caso exista
+    app.service('servComunicado', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService) {
+
+        this.GetModel = function () {
+            return $http.get('/NewSafetyChem/Comunicado/GetComunicado').then(function (response) {
+                return response.data;
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+    }]);
+
+    app.service('servAuditoria', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService, postComplexDataService) {
+        this.GetFuncionalidadesAuditoria = function () {
+            return $http.get('/NewSafetyChem/Auditoria/GetFuncionalidadesAuditoria').then(function (response) {
+                return response.data;
+            });
+        };
+
+        this.GetDetalhesCamposAuditoria = function (logAcaoId, idRegistro) {
+            return $http.get('/NewSafetyChem/Auditoria/GetDetalhesCamposAuditoria', { params: { logAcaoId: logAcaoId, idRegistro: idRegistro } }).then(function (response) {
+                return response.data;
+            });
+        };
+
+        this.GetRegistrosAuditoria = function (model) {
+            return postComplexDataService.postComplexData(
+                '/NewSafetyChem/Auditoria/GetRegistrosAuditoria',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+    }]);
+
+    app.service('servRequisicaoAreas', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService) {
+        this.areaSelecionada = null;
+        this.selectedAreaItem = null;
+
+        this.GetAreaNome = function (areas, area) {
+            if (areas.length > 0) {
+                var Area = areas.find(x => x.AreaId == area.AreaId);
+                return Area.Nome;
+            }
+        };
+
+        this.getAreasFiltradas = function (areas, areasRequisitantes, query) {
+            var Areas = areas.filter(function (area) {
+                return !areasRequisitantes.find(x => x.AreaId == area.AreaId);
+            });
+            var results = query ? Areas.filter(createAreaFilterFor(query)) : Areas;
+            return results;
+        };
+
+        function createAreaFilterFor(query) {
+            var lowercaseQuery = angular.lowercase(query);
+
+            return function filterFn(state) {
+                if (state.Nome) {
+                    return (state.Nome.toLowerCase().indexOf(lowercaseQuery) !== -1);
+                }
+                if (state.Descricao) {
+                    return (state.Descricao.toLowerCase().indexOf(lowercaseQuery) !== -1);
+                }
+            };
+        };
+
+        this.selecionarArea = function (item) {
+            if (item !== undefined) {
+                this.areaSelecionada = item;
+            }
+        };
+
+        this.AddArea = function (model, mensagem) {
+
+            if (this.areaSelecionada) {
+                this.areaSelecionada.Ativo = true;
+                this.areaSelecionada.RequisicaoId = model.RequisicaoId;
+                this.areaSelecionada.UsuarioId = model.UsuarioId;
+                model.RequisicoesAreasRequisitante.push(this.areaSelecionada);
+                
+                this.areaSelecionada = null;
+                this.selectedAreaItem = null;
+            }
+            else {
+                messageService.MessageInfo(mensagem.texto);
+            }
+        }
+
+        this.ExcluirArea = function (model, index, id) {
+            model.RequisicoesAreasRequisitante.splice(index, 1);
+        };
+
+    }]);
+
+    app.service('servGridUsuario', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService, postComplexDataService) {
+        this.SalvarColunasGridUsuario = function (model) {
+            return postComplexDataService.postComplexData(
+                '/Plataforma/SalvarColunasGridUsuario',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+    }]);
+
+    app.service('servPedidoProduto', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService, postComplexDataService) {
+        this.SalvarPedido = function (model) {
+            return postComplexDataService.postComplexData(
+                '/NewSafetyChem/Pedido/SalvarPedido',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+    }]);
+
+    // ** serviço para realizar o download de arquivos
+    app.service('servDownload', ['$http', 'messageService', 'postComplexDataService', function ($http, messageService, postComplexDataService) {
+
+        this.GetParametroEstruturaConteudoByEmpresaIdentificadorId = function (empresaId, identificadorId) {
+            return $http.get('/NewSafetyChem/Empresa/GetParametroEstruturaConteudoByEmpresaIdentificadorId', {
+                params: {
+                    empresaId: empresaId,
+                    identificadorId: identificadorId
+                }
+            }).then(function (response) {
+                return response.data;
+            });
+        };
+
+        this.GerarDocumentoDownload = function (model) {
+            return postComplexDataService.postComplexData(
+                '/NewSafetyChem/Produto/GerarDocumentoDownload',
+                model
+            ).then(function (response) {
+                return response.data;
+            });
+        };
+
+        this.PublicarDocumentoBase = function (model) {
+            return postComplexDataService.postComplexData(
+                '/NewSafetyChem/Documentos/PublicarDocumentoBase',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+        this.GetDownloadCustom = function (caminho, nomeArquivo, ocultarDataPublicacao = false, funcionalidadeId) {
+            return $http.get('/NewSafetyChem/DocumentoPublicado/DownloadArquivoCustomizado', {
+                params: {
+                    caminhoCompleto: caminho,
+                    fileName: nomeArquivo,
+                    ocultarDataPublicacao: ocultarDataPublicacao,
+                    funcionalidade: funcionalidadeId
+                },
+                responseType: 'arraybuffer'
+            }).then(function (responseCompactar) {
+                angularUtil.SaveFile(responseCompactar);
+                return responseCompactar;
+
+            }, function (responseCompactar) {
+                messageService.MessageInternalError();
+            });
+        };
+
+        this.GetDownload = function (tipoExportacao, funcionalidade, fileName) {
+            return $http.get('/NewSafetyChem/ExportarDado/DownloadArquivo', { params: { tipo: tipoExportacao, funcionalidade: funcionalidade, fileName: fileName }, responseType: 'arraybuffer' }
+            ).then(function (responseCompactar) {
+                angularUtil.SaveFile(responseCompactar);
+                return responseCompactar;
+
+            }, function (responseCompactar) {
+                messageService.MessageInternalError();
+            });
+        };
+
+        this.DownloadFileFluxoAprovacao = function (model, abaId, empresaId) {
+            return $http.get('/NewSafetyChem/IdentificacaoFluxoAprovacao/DownloadFileFluxoAprovacao',
+                {
+                    params: {
+                        relativePath: model.RelativePath,
+                        aba: abaId,
+                        areaId: model.AreaId,
+                        requisicaoId: model.RequisicaoId,
+                        empresaId: empresaId
+                    }, responseType: 'arraybuffer'
+                }).then(function (responseCompactar) {
+                    angularUtil.SaveFile(responseCompactar);
+                    return responseCompactar;
+                }, function () {
+                    messageService.MessageInternalError();
+                });
+        };
+    }]);
+
+    // ** JPM - ROTINA DE CAIXA DE MENSAGENS (ERRO, SUCESSO, CONFIRMAÇÃO, ETC) - INÍCIO
+    var MessageModelReturn = function () {
+        this.messages = [];
+    };
+
+    MessageModelReturn.prototype.addNewResult = function (message, buttons, buttonIndex) {
+        this.messages.push({ Identificador: message.identificador, IdentificadorBotao: buttons[buttonIndex].Identificador });
+    };
+
+    MessageModelReturn.prototype.getResult = function (IdentificadorMensagem) {
+        var id = IdentificadorMensagem;
+        var requestedMessage = this.messages.find(function (message) {
+            return message.Identificador == id
+        });
+        var ret = ""
+        if (requestedMessage) {
+            ret = requestedMessage.IdentificadorBotao;
+        }
+        return ret;
+    };
+
+    MessageModelReturn.prototype.getResultYes = function (IdentificadorMensagem) {
+        return this.getResult(IdentificadorMensagem) == "Geral_Sim";
+    };
+
+    MessageModelReturn.prototype.getResultNo = function (IdentificadorMensagem) {
+        return this.getResult(IdentificadorMensagem) == "Geral_Nao";
+    };
+
+    MessageModelReturn.prototype.getResultOk = function (IdentificadorMensagem) {
+        var result = this.getResult(IdentificadorMensagem);
+        return result == "Ok" || result == "Geral_OK" || result == "Geral_Ok";
+    };
+
+    MessageModelReturn.prototype.getResultCancel = function (IdentificadorMensagem) {
+        var result = this.getResult(IdentificadorMensagem);
+        return result == "Cancelar";
+    };
+
+    MessageModelReturn.prototype.ExistsMessageByIdentifierKey = function (ValidationViewModel, identifier) {
+        var exists = false;
+
+        if ((identifier != null && identifier.length > 0)
+            && ValidationViewModel != null && ValidationViewModel.Messages != null
+            && ValidationViewModel.Messages.length > 0) {
+
+            for (var index = 0; index < ValidationViewModel.Messages.length; index++) {
+                if (ValidationViewModel.Messages[index].Identificador == identifier) {
+                    exists = true;
+                }
+            }
+        }
+
+        return exists;
+    };
+
+    var getMessage = function (messageModel) {
+        if (messageModel.Mensagem && messageModel.Mensagem !== "")
+            return messageModel.Mensagem;
+        else
+            return messageModel.Identificador + (messageModel.argsDescription ? ": " + messageModel.argsDescription : "");
+    };
+
+    app.service('messageService', ['$timeout', '$uibModal', '$q', 'idiomaService', function ($timeout, $uibModal, $q, idiomaService) {
+
+        // ** mensagem de acordo com o modelo de validação que vem do servidor
+        this.MessageModel = function (ValidationViewModel, titulo, naoMostraMensagensSeForSohUmaOk) {
+            var messageModelReturn = new MessageModelReturn();
+            var msgServ = this;
+            if (ValidationViewModel == null) {
+                return this.MessageInternalError();
+            }
+
+            var sohUmaMensagemOk = true;
+            if (typeof naoMostraMensagensSeForSohUmaOk == 'undefined' || naoMostraMensagensSeForSohUmaOk == null) {
+                naoMostraMensagensSeForSohUmaOk = false;
+            }
+
+            var setMessageType = function (messageType) {
+                if (messageType == MessageType.Success) {
+                    return "success";
+                } else if (messageType == MessageType.Information) {
+                    return "info";
+                } else if (messageType == MessageType.Warning) {
+                    return "warning";
+                } else if (messageType == MessageType.Error) {
+                    return "error";
+                }
+                return "info";
+            }
+
+            if (ValidationViewModel.Messages.length > 0) {
+                var promises = [], currentPromise = -1;
+                var deferred = $q.defer();
+                var messages = []
+                var message;
+                var buttons;
+                var modais = [];
+
+                if (ValidationViewModel.Messages.length > 1) {
+                    sohUmaMensagemOk = false;
+                }
+                for (var i = 0; i < ValidationViewModel.Messages.length; i++) {
+                    message = ValidationViewModel.Messages[i];
+                    if (sohUmaMensagemOk && message.MessageType != MessageType.Success) {
+                        sohUmaMensagemOk = false;
+                    }
+                    buttons = message.Buttons;
+                    messages.push({ conteudo: getMessage(message), type: setMessageType(message.MessageType), identificador: message.Identificador });
+                    // se está na última linha, ou se a próxima linha vai ser de botão/escolha, ou se a msg atual já é de botão/escolha, já mostra as mensagens agrupadas
+                    if ((i + 1 == ValidationViewModel.Messages.length ||
+                        (ValidationViewModel.Messages[i + 1].Buttons && ValidationViewModel.Messages[i + 1].Buttons.length > 0 && !message.forcaAgrupamentoComProximaMensagem) ||
+                        message.Buttons && message.Buttons.length > 0)
+                        & messages.length > 0) {
+
+                        modais.push({ messages: messages, buttons: buttons });
+                        messages = [];
+                    }
+                }
+
+                var promise;
+
+                //if (naoMostraMensagensSeForSohUmaOk && sohUmaMensagemOk) {
+
+                //}
+                var promiseIterator = function (modalIndex) {
+                    promise = msgServ.Message(modais[modalIndex].messages, titulo, modais[modalIndex].buttons);
+                    promise.then(function (buttonIndex) {
+                        if (modais[modalIndex].buttons && modais[modalIndex].buttons.length > 1)
+                            messageModelReturn.addNewResult(modais[modalIndex].messages[0], modais[modalIndex].buttons, buttonIndex);
+
+                        if (modalIndex + 1 == modais.length) {
+                            deferred.resolve(messageModelReturn);
+                            return;
+                        }
+                        promiseIterator(++modalIndex);
+                    });
+                    return;
+                };
+
+                promiseIterator(0);
+
+                // para usar essa promise, usar os metodos getResult da MessageModelReturn, e suas variantes
+                return deferred.promise;
+            }
+
+            var conteudos = [];
+
+            if ((!ValidationViewModel.Messages || ValidationViewModel.Messages.length == 0) && idiomaService.translations) {
+
+                if (ValidationViewModel.Success) {
+
+                    if (naoMostraMensagensSeForSohUmaOk) {
+                        var deferred = $q.defer();
+                        deferred.resolve();
+                        return deferred.promise;
+                    }
+
+                    var texto = idiomaService.translations.Geral_OperacaoConcluidaSucesso != null ? idiomaService.translations.Geral_OperacaoConcluidaSucesso.texto : '';
+
+                    conteudos = [{ conteudo: texto, type: "success" }];
+
+                } else {
+                    var texto = idiomaService.translations.Geral_OperacaoNaoRealizada != null ? idiomaService.translations.Geral_OperacaoNaoRealizada.texto : '';
+
+                    conteudos = [{ conteudo: texto, type: null }];
+                }
+            } else {
+                if (ValidationViewModel != null && ValidationViewModel.Messages != null && ValidationViewModel.Messages.length > 0) {
+
+                    conteudos = [{ conteudo: getMessage(ValidationViewModel.Messages[0]) /* ValidationViewModel.Messages[0].Mensagem*/, type: setMessageType(ValidationViewModel.Messages[0].MessageType) }];
+
+                }
+            }
+
+            return this.Message(conteudos, titulo, null);
+        };
+
+        // mensagem sim ou não, normal
+        this.MessageYesNo = function (conteudo, titulo, type) {
+            var botoes = [
+                { texto: idiomaService.translations.Geral_Sim.texto, type: 'primary' },
+                { texto: idiomaService.translations.Geral_Nao.texto, type: 'danger' }
+            ];
+
+            return this.Message([{ conteudo: conteudo, type: type }], titulo, botoes);
+        };
+
+        this.MessagePesquisaSatisfacao = function (conteudo, titulo, type) {
+            var botoes = [
+                { texto: idiomaService.translations.Geral_ResponderAgora.texto, type: 'primary' },
+                { texto: idiomaService.translations.Geral_ResponderMaisTarde.texto, type: 'default' }
+            ];
+
+            return this.Message([{ conteudo: conteudo, type: type }], titulo, botoes);
+        };
+
+        this.MessageWithButtons = function (conteudo, botoes, titulo, type) {
+            if (!type) {
+                type = "info";
+            }
+            return this.Message([{ conteudo: conteudo, type: type }], titulo, botoes);
+        };
+
+        // ** mensagem padrão de erro interno, com texto pré-definido
+        this.MessageInternalError = function () {
+            var conteudo = idiomaService.translations.Geral_ErroInterno.texto;
+            return this.MessageError(conteudo);
+        };
+
+        // ** mensagem de erro
+        this.MessageError = function (conteudo, titulo) {
+            var botoes = [];
+            return this.Message([{ conteudo: conteudo, type: 'error' }], titulo, botoes);
+        };
+
+        // ** mensagem de sucesso
+        this.MessageSuccess = function (conteudo, titulo) {
+            var botoes = [];
+            return this.Message([{ conteudo: conteudo, type: 'success' }], titulo, botoes);
+        };
+
+        // ** mensagem de informação
+        this.MessageInfo = function (conteudo, titulo) {
+            var botoes = [];
+            return this.Message([{ conteudo: conteudo, type: 'info' }], titulo, botoes);
+        };
+
+        // ** mensagem de url - com botão de cópia
+        this.MessageURLCopy = function (conteudo, titulo) {
+            var botoes = [];
+            return this.MessageURL([{ conteudo: conteudo, type: 'info' }], titulo, botoes);
+        };
+
+        this.MessageExisteProdutoFluxo = function (conteudo, titulo, type) {
+            var botoes = [
+                { texto: idiomaService.translations.CriarCadastroOutroNomeComercial.texto, type: 'primary' },
+                { texto: idiomaService.translations.VincularCadastroRequisicao.texto, type: 'default' },
+                { texto: idiomaService.translations.Cancelar.texto, type: 'danger' }
+            ];
+
+            return this.Message([{ conteudo: conteudo, type: type }], titulo, botoes);
+        };
+
+        // ** mensagem genérica (chamada pelos métodos acima)
+        this.Message = function (conteudo, titulo, botoes, naoMostraMsg) {
+            if (naoMostraMsg) {
+                var deferred = $q.defer();
+
+                deferred.resolve(0)
+                return deferred.promise;
+            }
+
+            // mostra o modal de manutenção do registro
+            // documentação: https://angular-ui.github.io/bootstrap/
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: true, // evita sair sem ser pelo botão cancelar
+                templateUrl: '/Plataforma/Mensagem', controller: 'messageController', controllerAs: 'msgCtrl',
+                bindToController: true, size: 'dialog',
+                resolve: {
+                    msgParams: function () {
+                        return {
+                            titulo: titulo,
+                            conteudo: conteudo,
+                            botoes: botoes
+                        };
+                    }
+                }
+            });
+            // retorna uma promise, na qual pode ser chamado o método Then, que aceita uma função que será executada quando o processamento terminar
+            return modalInstance.result;
+        };
+
+        // ** mensagem url com botão copy 
+        this.MessageURL = function (conteudo, titulo, botoes, naoMostraMsg) {
+            if (naoMostraMsg) {
+                var deferred = $q.defer();
+
+                deferred.resolve(0)
+                return deferred.promise;
+            }
+
+            // mostra o modal de manutenção do registro
+            // documentação: https://angular-ui.github.io/bootstrap/
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: true, // evita sair sem ser pelo botão cancelar
+                templateUrl: '/Plataforma/MensagemURL', controller: 'messageController', controllerAs: 'msgCtrl',
+                bindToController: true, size: 'dialog',
+                resolve: {
+                    msgParams: function () {
+                        return {
+                            titulo: titulo,
+                            conteudo: conteudo,
+                            botoes: botoes
+                        };
+                    }
+                }
+            });
+            // retorna uma promise, na qual pode ser chamado o método Then, que aceita uma função que será executada quando o processamento terminar
+            return modalInstance.result;
+        };
+
+    }]);
+
+    app.controller('messageController', ['$timeout', '$uibModalInstance', 'msgParams', 'idiomaService', function ($timeout, $uibModalInstance, msgParams, idiomaService) {
+
+        var msgCtrl = this;
+        /*
+        msgParams esperado:
+            titulo - string
+            conteudo - array
+                por posição:
+                string - mensagem
+                type - success, info, warning, danger ou error
+            botoes - array
+                por posição:
+                    texto - string. Texto do botão.
+                    type - string. Tipo do botão. Definirá a classe. Possíveis:
+                        success
+                        default
+                        danger
+                        primary
+                        info
+                        warning
+                    class - string. Classe do botão. Se informar essa, não informar o type. Possíveis:
+                        btn btn-success
+                        btn btn-default
+                        btn btn-danger
+                        btn btn-primary
+                        btn btn-info
+                        btn btn-warning
+        */
+        var type, conteudo, classe;
+        if (!msgParams.conteudo instanceof Array) {
+            msgParams.conteudo = [msgParams.conteudo];
+        }
+
+        msgCtrl.mensagens = [];
+        for (var i = 0; i < msgParams.conteudo.length; i++) {
+            type = msgParams.conteudo[i].type;
+            conteudo = msgParams.conteudo[i].conteudo;
+            classe = msgParams.conteudo[i]['class'];
+            icone = "";
+
+            if (type) {
+                if (type == 'success') { classe = 'alert alert-block alert alert-success fade in'; icone = "fa fa-check-circle fa-fw fa-lg" }
+                if (type == 'info') { classe = 'alert alert-block alert alert-info fade in'; icone = "fa fa-info-circle fa-fw fa-lg" }
+                if (type == 'warning') { classe = 'alert alert-block alert alert-warning fade in'; icone = "fa fa-warning fa-fw fa-lg" }
+                if (type == 'danger') { classe = 'alert alert-block alert alert-danger fade in'; icone = "fa fa-times-circle fa-fw fa-lg" }
+                if (type == 'error') { classe = 'alert alert-block alert alert-danger fade in'; icone = 'fa fa-times-circle fa-fw fa-lg' }
+            }
+            if (!classe) {
+                classe = 'alert alert-block alert alert-info fade in';
+            }
+
+            msgCtrl.mensagens.push({ conteudo: conteudo, classe: classe, icone: icone, type: type });
+        }
+
+        if (msgParams.titulo) {
+            msgCtrl.titulo = msgParams.titulo;
+        } else {
+            if (msgParams.type && msgParams.type == 'success') {
+                msgCtrl.titulo = "SafetyChem";
+            } else {
+                if (idiomaService.translations != null && idiomaService.translations.length > 0) {
+                    if (!(idiomaService.translations.Geral_Atencao === undefined)) {
+
+                        msgCtrl.titulo = idiomaService.translations.Geral_Atencao.texto;
+                    }
+                }
+            }
+        }
+
+        msgCtrl.subTitulo = null;
+        msgCtrl.botoes = msgParams.botoes;
+
+        if (msgCtrl.botoes == null) {
+            msgCtrl.botoes = [];
+        }
+        if (msgCtrl.botoes.length == 0) {
+            msgCtrl.botoes.push({});
+        }
+
+        for (var i = 0; i < msgCtrl.botoes.length; i++) {
+            if (msgCtrl.botoes[i]["ButtonType"] != null) {
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Success) { msgCtrl.botoes[i].class = 'btn btn-success'; }
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Default) { msgCtrl.botoes[i].class = 'btn btn-default'; }
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Danger) { msgCtrl.botoes[i].class = 'btn btn-danger'; }
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Primary) { msgCtrl.botoes[i].class = 'btn btn-primary'; }
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Info) { msgCtrl.botoes[i].class = 'btn btn-info'; }
+                if (msgCtrl.botoes[i].ButtonType == MessageButtonType.Warning) { msgCtrl.botoes[i].class = 'btn btn-warning'; }
+                msgCtrl.botoes[i].texto = msgCtrl.botoes[i].Mensagem;
+            } else {
+                if ((msgCtrl.botoes[i].type && !msgCtrl.botoes[i].class)) {
+                    msgCtrl.botoes[i].class = "btn btn-" + msgCtrl.botoes[i].type;
+                } else if ((!msgCtrl.botoes[i].type && !msgCtrl.botoes[i].class)) {
+                    if (i == 0) {
+                        msgCtrl.botoes[i].class = "btn btn-primary";
+                    } else {
+                        msgCtrl.botoes[i].class = "btn btn-default";
+                    }
+                }
+                if (!msgCtrl.botoes[i].texto) {
+                    if (i == 0) {
+                        msgCtrl.botoes[i].texto = "Ok";
+                    } else {
+                        msgCtrl.botoes[i].texto = "Cancel";
+                    }
+                }
+            }
+            if (i == 0) {
+                msgCtrl.botoes[i].autofocus = true;
+            } else {
+                msgCtrl.botoes[i].autofocus = false;
+            }
+        }
+
+        msgCtrl.clickBotao = function (index) {
+            $uibModalInstance.close(index);
+        };
+
+        this.CopyURL = function (text) {
+            msgCtrl.tooltip = idiomaService.translations.Geral_Copiado.texto;
+            var dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+        };
+
+
+    }]);
+    // ** JPM - ROTINA DE CAIXA DE MENSAGENS (ERRO, SUCESSO, CONFIRMAÇÃO, ETC) - FIM
+
+    app.service('servPreSelecao', ['$http', 'postComplexDataService', function ($http, postComplexDataService) {
+
+        this.SalvarPreSelecao = function (model) {
+            return postComplexDataService.postComplexData(
+                '/Plataforma/SalvarPreSelecao',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+
+        this.ExcluirPreSelecao = function (model) {
+            return postComplexDataService.postComplexData(
+                '/Plataforma/ExcluirPreSelecao',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+
+    }]);
+
+    app.service('servRotinaProdutoAtualizar', ['$http', '$timeout', 'postComplexDataService', function ($http, $timeout, postComplexDataService) {
+
+        this.GetModelAtualizar = function (funcionalidadeId, produtoId) {
+            return $http.get('/Plataforma/GetModelAtualizar', {
+                params: {
+                    funcionalidadeId: funcionalidadeId, produtoId: produtoId
+                }
+            }).then(function (response) {
+                return response.data;
+            });
+        };
+
+        this.AtualizarProdutosEmLote = function (model) {
+            return postComplexDataService.postComplexData(
+                '/Plataforma/AtualizarProdutosEmLote',
+                model
+            ).then(function (response) {
+                return response.data;
+                //em caso de erro
+            }, function (response) {
+                messageService.MessageInternalError();
+            });
+        };
+
+    }]);
+
+    // ** JPM - serviço para tratar traduções do sistema
+    app.service('idiomaService', ['$http', '$q', function ($http, $q) {
+        var thisIdiomaService = this;
+        this.translations = {};
+        this.translationsIdiomaLogado = {};
+        this.translationsByIdioma = [];
+
+        this.sistemaId = null;
+        this.funcionalidadeId = null;
+        this.idiomaId = null;
+        this.subDivisao = null;
+        this.idiomasSubDivisao = null;
+        this.idiomaIdSubDivisaoSelecionada = null;
+
+        this.translations.Geral_Sim = { texto: "Yes (favor carregar traduções do servidor)" };
+        this.translations.Geral_Nao = { texto: "No (favor carregar traduções do servidor)" }
+        this.translations.Geral_ErroInterno = { texto: "Internal Error (favor carregar traduções do servidor)" };
+        this.Geral_Atencao = { texto: "Atention (favor carregar traduções do servidor)" };
+        this.Geral_OperacaoConcluidaSucesso = { texto: "Success (favor carregar traduções do servidor)" };
+        this.Geral_OperacaoNaoRealizada = { texto: "Error (favor carregar traduções do servidor)" };
+
+        this.loadTranslationsFromServer = function (funcionalidadeId, idiomaId, sistemaId, isUpdateIdiomaUser) {
+            if (isUpdateIdiomaUser === null || isUpdateIdiomaUser === undefined) {
+                isUpdateIdiomaUser = false;
+            }
+            var translations = this.translations;
+            var promise = $http.get('/Plataforma/TraducaoCampos', {
+                params: {
+                    funcionalidadeId: funcionalidadeId,
+                    idiomaId: idiomaId,
+                    isFields: true,
+                    atualizaFuncionalidades: isUpdateIdiomaUser
+                }
+            }).then(function (response) {
+                thisIdiomaService.setTranslationsCallBackCulture(response.data.traducaoPagina);
+                return translations;
+            }, function () {
+                alert('Error retrieving page translations');
+            });
+            return promise;
+        };
+
+        this.loadTranslationsFromServerComSubDivisao = function (sistemaId, funcionalidadeId, idiomaIdLogado, subDivisao, idiomasSubDivisao, idiomaIdSubDivisaoSelecionada) {
+
+            var promise;
+            var translationsByIdioma = thisIdiomaService.translationsByIdioma;
+            // primeiro verifica se já
+            if (sistemaId !== thisIdiomaService.sistemaId
+                || funcionalidadeId !== thisIdiomaService.funcionalidadeId
+                || idiomaIdLogado !== thisIdiomaService.idiomaIdLogado
+                || subDivisao !== thisIdiomaService.subDivisao
+                || !angular.equals(idiomasSubDivisao, thisIdiomaService.idiomasSubDivisao)
+            ) {
+
+                promise = $http.get('/Plataforma/GetTraducoesBySubDivisao', {
+                    params: {
+                        sistemaId: Enums.Enum_Sistema.NewSafetyChem,
+                        funcionalidadeId: funcionalidadeId,
+                        idiomaId: idiomaIdLogado,
+                        subDivisao: subDivisao,
+                        idiomasSubDivisoes: idiomasSubDivisao
+                    }
+                }).then(function (response) {
+                    var idiomas = response.data;
+
+                    // armazena o cache, pra que não tenha que buscar caso seja chamado com mesmos parâmetros
+                    thisIdiomaService.sistemaId = sistemaId
+                    thisIdiomaService.funcionalidadeId = funcionalidadeId
+                    thisIdiomaService.idiomaIdLogado = idiomaIdLogado
+                    thisIdiomaService.subDivisao = subDivisao
+                    thisIdiomaService.idiomasSubDivisao = angular.copy(idiomasSubDivisao);
+
+                    idiomas.forEach(function (idioma) {
+                        // pra evitar duplicidades
+                        var trad;
+                        if (translationsByIdioma) {
+                            trad = translationsByIdioma.find(function (item) {
+                                return (item.IdiomaId == idioma.IdiomaId);
+                            });
+                        }
+                        if (!trad) {
+                            trad = { IdiomaId: idioma.IdiomaId, translations: {} };
+                            translationsByIdioma.push(trad);
+                        }
+                        thisIdiomaService.setTranslationsCallBackCulture(idioma.TraducoesIdiomas, trad.translations);
+                    });
+
+                }, function () {
+                    alert('Error retrieving page translations');
+                });
+            }
+            else {
+                var deferred = $q.defer();
+                deferred.resolve();
+                promise = deferred.promise;
+            }
+
+            return promise.then(function () {
+                var idioma;
+                if (idiomaIdLogado) {
+                    idioma = translationsByIdioma.find(function (item) {
+                        return (item.IdiomaId == idiomaIdLogado);
+                    });
+                    if (idioma)
+                        thisIdiomaService.translationsIdiomaLogado = idioma.translations;
+                }
+
+                if (idiomaIdSubDivisaoSelecionada) {
+                    idioma = translationsByIdioma.find(function (item) {
+                        return (item.IdiomaId == idiomaIdSubDivisaoSelecionada);
+                    });
+                    if (idioma)
+                        thisIdiomaService.translations = idioma.translations;
+                }
+
+                return { translations: thisIdiomaService.translations, translationsIdiomaLogado: thisIdiomaService.translationsIdiomaLogado };
+            });
+
+        }
+
+        this.setTranslationsCallBackCulture = function (translationsDataFromServer, objectToBeUpdated) {
+            if (!objectToBeUpdated) {
+                objectToBeUpdated = thisIdiomaService.translations;
+            }
+
+            // grava as traduções que vem do banco de dados em um objeto que será referenciado nos htmls e scripts
+            for (var i = 0; i < translationsDataFromServer.length; i++) {
+                if (objectToBeUpdated[translationsDataFromServer[i].Identificador] == null) {
+                    objectToBeUpdated[translationsDataFromServer[i].Identificador] = { texto: null, textoAuxiliar: null };
+                }
+                // Traducao de campo
+                objectToBeUpdated[translationsDataFromServer[i].Identificador].texto = translationsDataFromServer[i].Texto;
+                // Descricao completa de campo (tooltip)
+                objectToBeUpdated[translationsDataFromServer[i].Identificador].textoAuxiliar = translationsDataFromServer[i].TextoAuxiliar;
+            }
+        };
+
+        // busca idiomas ativos
+        this.GetIdiomasAtivos = function () {
+            var promise = $http.get('/Plataforma/GetAllIdiomasAtivos').then(function (response) {
+                return response.data.idiomas;
+
+                //em caso de erro
+            }, function (response) {
+                alert('error' + response);
+            });
+            return promise;
+        };
+
+        // mapeia os idiomas ativos para funcionar com Select2
+        this.GetIdiomasAtivosForSelect2 = function () {
+
+            return thisIdiomaService.GetIdiomasAtivos().then(function (idiomas) {
+
+                return $.map(idiomas, function (item) {
+                    return { id: item.IdiomaId, text: item.Nome };
+                });
+
+            }, function () {
+
+            });
+
+        };
+
+        // envia textos para tradução no google translate
+        this.Translate = function (list, idiomaOrigem, idiomaDestino) {
+
+            idiomaOrigem = util.Flags.GetGoogleTranslatorLanguage(idiomaOrigem);
+            idiomaDestino = util.Flags.GetGoogleTranslatorLanguage(idiomaDestino);
+            var promise = $http.post('/Plataforma/TraducaoTextos'
+                , { list: list, idiomaOrigem: idiomaOrigem, idiomaDestino: idiomaDestino }
+            ).then(function (response) {
+                var data = response.data;
+                return data.traducoes;
+                //em caso de erro
+            }, function (response) {
+                alert('Error');
+            });
+
+            return promise;
+        };
+
+        this.templates = {};
+        // função utilizada para definir o template do select2
+        this.templates.templateSelectIdioma = function (item) {
+            var $state = $(util.Flags.GetFlagsFormatSelectOption(item.id, item.text));
+            return $state;
+        }
+        // função utilizada para definir o template do select2
+        this.templates.templateSelectIdiomaSelected = function (item) {
+            var $state = $(util.Flags.SetFlagsFormatSelectOption(item.id, item.text));
+            return $state;
+        }
+
+    }]);
+
+    // ** serviço para trazer as funcionalidades de ação para os grids de registros
+    app.service('funcionalidadesService', ['$http', '$timeout', function ($http, $timeout) {
+
+        var GetSessaoAtual = function () {
+            var promise = $http.get('/Plataforma/VerificarSessao')
+                .then(function (response) {
+                    return response.data.exibeNotificacaoFimSecao;
+                    //em caso de erro
+                }, function (response) {
+                    console.log(response);
+                });
+            return promise;
+        };
+
+        var VerificarSessao = function (numeroTentativas) {
+
+            let numeroDeTentativas = numeroTentativas + 1;
+
+            try {
+
+                if (numeroDeTentativas > 3) {
+                    ExibeModalInatividade();
+                }
+                else {
+                    $timeout(function () {
+                        GetSessaoAtual().then(function (exibeNotificacaoFimSecao) {
+                            if (exibeNotificacaoFimSecao)
+                                ExibeModalInatividade();
+                            else
+                                VerificarSessao(0);
+                        });
+                    }, 9000);
+                }
+            } catch (e) {
+                VerificarSessao(1);
+            }
+        };
+
+        VerificarSessao(0);
+
+        this.AddDays = function (date, days) {
+            var result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        };
+
+        this.formataNumeroDecimalValidacao = function (str) {
+            var temp = parseFloat(str.toString().replace(',', '.'));
+            return temp;
+        };
+
+        this.ReplacePontoDecimal = function (valor) {
+
+            if (valor) {
+                var value = valor.toString();
+                value = value.replace('.', ',');
+                return value;
+            }
+        };
+
+        this.FormataData = function (data) {
+            let result = null;
+
+            if (data) {
+                data = data.split("-");
+
+                if (navigator.userAgent.match(/firefox|fxios/i)) {
+                    data = data[0] + "-" + data[1] + "-" + data[2].substring(0, 2);
+                    result = this.AddDays(data, 1);
+                }
+                else {
+                    data = data[1] + "-" + data[2].substring(0, 2) + "-" + data[0].substring(0);
+                    result = new Date(data);
+                }
+            }
+
+            return result;
+        };
+
+        this.FormataDataNoSalvarFireFox = function (data) {
+            let dataFormatada = data.toLocaleDateString().replaceAll("/", "-").split("-");
+            dataFormatada = dataFormatada[2] + "-" + dataFormatada[1] + "-" + dataFormatada[0];
+            return dataFormatada;
+        };
+
+        // ** busca as funcionalidades filhas de acordo com a funcionalidade pai (do menu)
+        this.GetOpcoesRotinaByLista = function (lista) {
+            return this.ProcessaGetOpcoesRotina(lista);
+        };
+
+        this.GetOpcoesRotina = function (funcionalidadeId) {
+
+            var listaFuncs = [];
+            listaFuncs.push(funcionalidadeId);
+
+            return this.ProcessaGetOpcoesRotina(listaFuncs);
+        };
+
+        this.ProcessaGetOpcoesRotina = function (lista) {
+
+            var promise = $http.get('/Plataforma/GetOpcoesRotinaByFuncionalidadePai', {
+                params: {
+                    idsFuncionalidadesPai: lista
+                }
+            }).then(function (response) {
+                response.data.opcoesRotina.forEach(function (item) {
+                    if (item.Link === "#Alterar") {
+                        response.data.opcoesRotina.PodeAlterar = true;
+                    }
+                    if (item.Link === "#Visualizar") {
+                        response.data.opcoesRotina.PodeVisualizar = true;
+                    }
+                    if (item.Link === "#GerarDocumento") {
+                        response.data.opcoesRotina.PodeGerarDoc = true;
+                    }
+                });
+                return response.data.opcoesRotina;
+                //em caso de erro
+            }, function (response) {
+                alert('error' + response);
+            });
+            return promise;
+        };
+
+        this.SomenteNumeros = function (evt) {
+            var theEvent = evt || window.event;
+
+            if (theEvent.type === 'paste') {
+                key = event.clipboardData.getData('text/plain');
+            } else {
+                var key = theEvent.keyCode || theEvent.which;
+                key = String.fromCharCode(key);
+            }
+            var regex = /[0-9]/;
+            if (!regex.test(key)) {
+                theEvent.returnValue = false;
+                if (theEvent.preventDefault) theEvent.preventDefault();
+            }
+            if (ctrl.model.AgrupamentoOU.length > 1) {
+                theEvent.returnValue = false;
+                if (theEvent.preventDefault) theEvent.preventDefault();
+            }
+        };
+
+        this.VerificaUTCDatas = function (datas, identificadorCampo) {
+            if (navigator.language == "en-US") {
+                datas.forEach(function (item) {
+                    item[identificadorCampo] = new Date(item[identificadorCampo]).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
+                });
+            }
+        };
+
+        // funções utilizadas para filtrar as ações, para diferenciar as que estão como dropdown, e as que estão como botão normal
+        this.FiltroApenasOpcaoRotinaDropdownNAO = function (opcaoRotina) {
+            return (opcaoRotina.AcaoDropdownMenu == null || !opcaoRotina.AcaoDropdownMenu) && opcaoRotina.Nivel != Enums.Enum_NivelFuncionalidade.FuncionalidadeGenericaTraducoes;
+        };
+        this.FiltroApenasOpcaoRotinaDropdownSIM = function (opcaoRotina) {
+            return (opcaoRotina.AcaoDropdownMenu != null && opcaoRotina.AcaoDropdownMenu) && opcaoRotina.Nivel != Enums.Enum_NivelFuncionalidade.FuncionalidadeGenericaTraducoes;
+        };
+        this.DeveMostrarDropdown = function (opcoesRotina) {
+            if (opcoesRotina) {
+                for (var i = 0; i < opcoesRotina.length; i++) {
+                    if (this.FiltroApenasOpcaoRotinaDropdownSIM(opcoesRotina[i])) {
+                        return true;
+                    }
+                }
+            };
+
+            return false;
+        };
+        this.GetTextoAcao = function (opcoesRotina, idiomaId) {
+            if (opcoesRotina != null && opcoesRotina.length > 0) {
+                opcoesRotina.forEach(function (item) {
+                    var traducao = item.Traducoes.find(function (trad) { return (trad.IdiomaId == idiomaId); });
+                    item.Nome = traducao.Texto;
+                });
+            };
+        };
+
+        this.GetMascaraNumeroInteiro = function (numero) {
+            var pattern = /^\d{1,20}$/;
+            if (!pattern.test(numero))
+                return null;
+            else return numero;
+        };
+
+        this.GetMascaraNumeroCAS = function (CAS) {
+            var pattern = /^[\d-]+$/;
+
+            if (CAS !== null
+                && CAS.length > 0 && pattern.test(CAS)) {
+
+                var result = this.RemoveFormatacaoNumeroCAS(CAS);
+                if (result.length <= 10) {
+                    result = this.AddFormatacaoNumeroCAS(result);
+                    return result;
+                }
+                else return null;
+            }
+            else {
+                return null;
+            }
+        };
+
+        this.ValidarSenha = function (senha) {
+
+            var senhaValidada = false;
+
+            if (senha && senha.length >= 8 && senha.match('(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9])(?=.{8,})') != null) {
+                senhaValidada = true;
+            }
+
+            return senhaValidada;
+        };
+
+        this.RemoveFormatacaoNumeroCAS = function (cas) {
+            if (cas !== null && cas.length > 0) {
+                cas = this.ReplaceAll(cas, '-', '');
+                cas = cas.substring(0, 15);
+            }
+            return cas;
+        };
+        this.AddFormatacaoNumeroCAS = function (cas) {
+            if (cas !== null && cas.length > 0) {
+                switch (cas.length) {
+                    case 0: cas = ''; break;
+                    case 1: cas = cas.charAt(0); break;
+                    case 2: cas = (cas.charAt(0) + "-" + cas.charAt(1)); break;
+                    case 3: cas = (cas.charAt(0) + cas.charAt(1) + "-" + cas.charAt(2)); break;
+                    case 4: cas = (cas.charAt(0) + "-" + cas.charAt(1) + cas.charAt(2) + "-" + cas.charAt(3)); break;
+                    case 5: cas = (cas.charAt(0) + cas.charAt(1) + "-" + cas.charAt(2) + cas.charAt(3) + "-" + cas.charAt(4)); break;
+                    case 6: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + "-" + cas.charAt(3) + cas.charAt(4) + "-" + cas.charAt(5)); break;
+                    case 7: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + "-" + cas.charAt(4) + cas.charAt(5) + "-" + cas.charAt(6)); break;
+                    case 8: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + "-" + cas.charAt(5) + cas.charAt(6) + "-" + cas.charAt(7)); break;
+                    case 9: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + "-" + cas.charAt(6) + cas.charAt(7) + "-" + cas.charAt(8)); break;
+                    case 10: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + "-" + cas.charAt(7) + cas.charAt(8) + "-" + cas.charAt(9)); break;
+                    case 11: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + "-" + cas.charAt(8) + cas.charAt(9) + "-" + cas.charAt(10)); break;
+                    case 12: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + cas.charAt(8) + "-" + cas.charAt(9) + cas.charAt(10) + "-" + cas.charAt(11)); break;
+                    case 13: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + cas.charAt(8) + cas.charAt(9) + "-" + cas.charAt(10) + cas.charAt(11) + "-" + cas.charAt(12)); break;
+                    case 14: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + cas.charAt(8) + cas.charAt(9) + cas.charAt(10) + "-" + cas.charAt(11) + cas.charAt(12) + "-" + cas.charAt(13)); break;
+                    case 15: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + cas.charAt(8) + cas.charAt(9) + cas.charAt(10) + cas.charAt(11) + "-" + cas.charAt(12) + cas.charAt(13) + "-" + cas.charAt(14)); break;
+                    case 15: cas = (cas.charAt(0) + cas.charAt(1) + cas.charAt(2) + cas.charAt(3) + cas.charAt(4) + cas.charAt(5) + cas.charAt(6) + cas.charAt(7) + cas.charAt(8) + cas.charAt(9) + cas.charAt(10) + cas.charAt(11) + cas.charAt(12) + "-" + cas.charAt(13) + cas.charAt(14) + "-" + cas.charAt(15)); break;
+                }
+            }
+            return cas;
+        };
+        this.ReplaceAll = function (str, find, replace) {
+            var replaced = str.replace(new RegExp(find, 'g'), replace);
+
+            return replaced;
+        };
+
+        // ** busca o GrupoPermissaoId
+        this.GetGrupoPermissaoId = function () {
+            var promise = $http.get('/Plataforma/GetUsuarioGrupoPermissao')
+                .then(function (response) {
+                    return response.data.grupoPermissaoId;
+                    //em caso de erro
+                }, function (response) {
+                    alert('error' + response);
+                });
+            return promise;
+        };
+
+        this.AbrirRequisicao = function (requisicaoId, idiomaId, empresaId) {
+
+            var params = [
+                '_blank',
+                'height=' + screen.height,
+                'width=' + screen.width,
+                'scrollbars=1',
+                'resizable=yes'
+            ].join(',');
+
+            var url = '/NewSafetyChem/FluxoAprovacao/AbrirRequisicao?';
+            var parametros = 'requisicaoId=' + requisicaoId + '&idiomaSistemaId=' + idiomaId + '&empresaId=' + empresaId;
+
+            return $http.get('/NewSafetyChem/FluxoAprovacao/GetUrlEncrypt', {
+                params: {
+                    parametros: parametros
+                },
+                async: false
+            }).then(function (response) {
+
+                var popup = util.Window.OpenWindow(url + response.data, '_blank', params);
+
+                popup.moveTo(0, 0);
+
+                if (!popup
+                    || popup.closed
+                    || (typeof popup.closed === 'undefined')
+                    || popup.outerHeight === 0
+                    || popup.outerWidth === 0
+                ) {
+                    return false;
+                }
+                return true;
+
+            }, function () {
+                messageService.MessageInternalError();
+            });
+        };
+
+        this.AbrirDocumento = function (caminhoCompleto, nomeArquivo, funcionalidadeId) {
+            let url = '/NewSafetyChem/Documentos/AbrirDocumento?path=' + encodeURIComponent(caminhoCompleto) +
+                '&fileName=' + encodeURIComponent(nomeArquivo) +
+                '&funcionalidadeId=' + encodeURIComponent(funcionalidadeId);
+
+            util.Window.OpenWindow(url, "New Window", "height=1000,width=900");
+        };
+
+        this.AbrirPdfficacaoFluxoAprovacao = function (model, abaId, empresaId) {
+            var param = [
+                '_blank',
+                'height=' + screen.height,
+                'width=' + screen.width,
+                'scrollbars=1',
+                'resizable=yes'
+            ];
+            return $http.get('/NewSafetyChem/IdentificacaoFluxoAprovacao/DownloadFileFluxoAprovacao',
+                {
+                    params: {
+                        relativePath: model.RelativePath,
+                        aba: abaId,
+                        areaId: model.AreaId,
+                        requisicaoId: model.RequisicaoId,
+                        empresaId: empresaId
+                    }, responseType: 'arraybuffer'
+                }).then(function (response) {
+                    let blob = new Blob([response.data], { type: 'application/pdf' });
+                    let url = URL.createObjectURL(blob)
+                    util.Window.OpenWindow(url, "_blank", param);
+                    ;
+                    return response;
+                }, function () {
+                    messageService.MessageInternalError();
+                });
+        };
+
+        this.AbrirProduto = function (produtoId, logAcaoId, acaoProduto, idiomaId, documentoId, ehGeracaoDocumento) {
+
+            if (produtoId > 0) {
+
+                if (ehGeracaoDocumento == undefined)
+                    ehGeracaoDocumento = false;
+
+                var params = [
+                    '_blank',
+                    'height=' + screen.height,
+                    'width=' + screen.width,
+                    'scrollbars=1',
+                    'resizable=yes'
+                ].join(',');
+
+                var url = '/NewSafetyChem/Produto/Cadastrar?';
+
+                var parametros = 'produtoId=' + produtoId
+                    + '&logAcaoIdInclusao=' + logAcaoId +
+                    '&acaoProduto=' + acaoProduto + '&idiomaSistemaId=' + idiomaId +
+                    '&documentoId=' + documentoId + '&ehGeracaoDocumento=' + ehGeracaoDocumento;
+
+                return $http.get('/NewSafetyChem/Produto/GetUrlEncrypt', {
+                    params: {
+                        parametros: parametros
+                    },
+                    async: false
+                }).then(function (response) {
+
+                    var popup = util.Window.OpenWindow(url + response.data, '_blank', params);
+
+                    popup.moveTo(0, 0);
+
+                    if (!popup
+                        || popup.closed
+                        || (typeof popup.closed === 'undefined')
+                        || popup.outerHeight === 0
+                        || popup.outerWidth === 0
+                    ) {
+
+                        return false;
+                    }
+                    return true;
+
+                }, function () {
+                    messageService.MessageInternalError();
+                });
+            }
+        };
+
+        this.DifferenceBetweenDates = function (day1, day2) {
+            return Math.abs(day2 - day1) / (1000 * 3600 * 24); // return in days
+        };
+
+
+        CreateStackedChartDataSets = function (dataSets, chartsInfo, colors, isEmail) {
+            let count = 0;
+            chartsInfo.forEach(function (item) {
+                let values = [];
+
+                const groupAlreadyExists = dataSets.find(function (data) {
+                    return (data.label === item.Z);
+                });
+
+                if (!groupAlreadyExists) {
+                    const newDataSet = {
+                        label: item.Z,
+                        data: []
+                    };
+
+                    if (!isEmail)
+                        newDataSet.backgroundColor = colors[count];
+
+                    const newGrouping = chartsInfo.filter(function (grp) {
+                        return grp.Z == item.Z;
+                    });
+
+                    newGrouping.forEach(function (newGrp) {
+                        values.push(newGrp.Y);
+                    });
+
+                    newDataSet.data = values;
+                    dataSets.push(newDataSet);
+                    count++;
+                }
+            });
+
+            if (isEmail)
+                return JSON.stringify(dataSets);
+        };
+
+        CreateNormalChartDataSets = function (dataSets, labelText, values, colors, chartType, chartTypesEnum) {
+            const newDataSet = {
+                label: labelText,
+                data: values,
+                backgroundColor: chartType == chartTypesEnum.find(x => x.Id == Enums.Enum_GraficoTipo["Bar"]).Descricao ? colors[0] : colors
+            };
+
+            dataSets.push(newDataSet);
+        };
+
+        CreateChart = function (chartsInfo, chartType, chartTypesEnum, labels, values, labelText, colors, id, displayTitle, isStacked, eventClickChart, divCharts, isEmail, charts) {
+    
+            const newChart = document.createElement("canvas"); 
+             
+            Chart.register(ChartDataLabels);
+
+            const chartObj = {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: []
+                },
+
+                options: {
+                    scales: {
+                        xAxes: {
+                            stacked: true,
+                        },
+                        yAxes: {
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: displayTitle === 'true',
+                            text: labelText
+                        },
+                        datalabels: {
+                            display: true,
+                            backgroundColor: "transparent",
+                            borderRadius: 3,
+                            color: "white"
+                        }
+                    },
+                    onClick: eventClickChart,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false
+                }
+            };
+
+            const chart = new Chart(newChart, chartObj);
+
+            if (isStacked)
+                CreateStackedChartDataSets(chart.config.data.datasets, chartsInfo, colors, false);
+            else
+                CreateNormalChartDataSets(chart.config.data.datasets, labelText, values, colors, chartType, chartTypesEnum);
+
+            chart.update();
+
+            if (isEmail) {
+                const chartStr = JSON.stringify(chartObj);
+                const endPointApi = 'https://quickchart.io/chart?v=3&c=';
+                const chartSrc = endPointApi + encodeURIComponent(chartStr);
+                charts += '<img src=\"' + chartSrc + '\" style="width: 50%;">';
+            }
+            else {
+                const divChart = document.createElement("div");
+                divChart.classList.add("col-md-6", "col-sm-6", "col-lg-6");
+                divCharts.appendChild(divChart);
+                newChart.style.height = "246px";
+                newChart.id = id;
+                divChart.appendChild(newChart);
+            }
+
+            return charts;
+        };
+
+        FillChartData = function (chartsInfo, labels, values) {
+            chartsInfo.forEach(function (data) {
+                if (data.X) {
+                    if (!(labels.indexOf(data.X) > -1)) {
+                        labels.push(data.X);
+                    }
+                }
+                values.push(data.Y);
+            });
+        };
+
+        this.CreateCharts = function (model, chartsData, translations, isEmail, chartTypesEnum, eventClickChart, charts) {
+
+            const colors = ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F', '#EDC948', '#B17CA2'];
+
+            if (!isEmail) {
+                var divCharts = document.getElementById('charts');
+
+                while (divCharts.children.length > 0) {
+                    divCharts.children[0].remove();
+                }
+            }
+
+            model.forEach(function (panel) {
+                const itemChart = chartsData.find(function (item) {
+                    return (item.IndicadorId === panel.IndicadorId);
+                });
+
+                if (itemChart.GraficoTipo) {
+                    const chartType = chartTypesEnum.find(x => x.Id == itemChart.GraficoTipo).Descricao;
+                    const labelText = translations[itemChart.IdentificadorTraducaoComboBox].texto;
+                    const labels = [];
+                    const values = [];
+                    const isStacked = panel.InfosGrafico.some(x => x.Z != null);
+
+                    FillChartData(panel.InfosGrafico, labels, values);
+
+                    const displayTitle = itemChart.GraficoTipo == Enums.Enum_GraficoTipo["Pie"] || isStacked ? 'true' : 'false';
+                    
+                    charts = CreateChart(panel.InfosGrafico, chartType, chartTypesEnum, labels, values, labelText,
+                        colors, itemChart.IndicadorId, displayTitle, isStacked, eventClickChart, divCharts, isEmail, charts);
+                }
+            });
+
+            return charts;
+        };
+
+        this.OrderByDatesAsc = function (dates) {
+            return dates.sort(function (a, b) {
+                const key1 = a.Data;
+                const key2 = b.Data;
+
+                if (key1 < key2) {
+                    return -1;
+                } else if (key1 == key2) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            });
+        };
+
+        this.MascaraPropriedadesFisicoQuimicas = function (valorInicial, valorFinal, campo, valorPressao, model, decimalSeparator) {
+
+            var valorInicialDecimal = null;
+            var valorFinalDecimal = null;
+            var valorPressaoDecimal = null;
+
+            if (valorInicial || parseFloat(valorInicial) == 0) {
+                var valorInicialFormat = valorInicial.toString();
+                valorInicialFormat = valorInicialFormat.replace(',', '.');
+
+                if (valorInicialFormat == '-')
+                    valorInicialFormat = '';
+                else
+                    valorInicialDecimal = parseFloat(valorInicialFormat);
+            }
+
+            if (valorFinal || parseFloat(valorFinal) == 0) {
+                var valorFinalFormat = valorFinal.toString();
+                valorFinalFormat = valorFinalFormat.replace(',', '.');
+
+                if (valorFinalFormat == '-')
+                    valorFinalFormat = '';
+                else
+                    valorFinalDecimal = parseFloat(valorFinalFormat);
+            }
+
+            if (valorPressao || parseFloat(valorPressao) == 0) {
+                var valorPressaoFormat = valorPressao.toString();
+                valorPressaoFormat = valorPressaoFormat.replace(',', '.');
+
+                if (valorPressaoFormat == '-')
+                    valorPressaoFormat = '';
+                else
+                    valorPressaoDecimal = parseFloat(valorPressaoFormat);
+            }
+
+            if ((valorInicialDecimal !== null || valorFinalDecimal !== null)) {
+                switch (campo) {
+                    case 'Ph':
+
+                        model.PhInicial = valorInicialDecimal;
+                        model.PhFinal = valorFinalDecimal;
+
+                        if (model.PhFinal > 14) {
+                            model.PhFinal = 14;
+                        }
+                        break;
+                    case 'PontoFusao':
+                        model.PontoFusaoInicial = valorInicialDecimal;
+                        model.PontoFusaoFinal = valorFinalDecimal;
+                        model.PontoFusaoPressao = valorPressaoDecimal;
+
+                        break;
+                    case 'PontoEbulicao':
+                        model.PontoEbulicaoInicial = valorInicialDecimal;
+                        model.PontoEbulicaoFinal = valorFinalDecimal;
+                        model.PontoEbulicaoPressao = valorPressaoDecimal;
+
+                        break;
+                    case 'AutoIgnicao':
+                        model.AutoIgnicaoTemperaturaInicial = valorInicialDecimal;
+                        model.AutoIgnicaoTemperaturaFinal = valorFinalDecimal;
+
+                        break;
+                    case 'Decomposicao':
+                        model.DecomposicaoTemperaturaInicial = valorInicialDecimal;
+                        model.DecomposicaoTemperaturaFinal = valorFinalDecimal;
+                        break;
+                    case 'Armazenamento':
+                        model.ArmazenamentoTemperaturaInicial = valorInicialDecimal;
+                        model.ArmazenamentoTemperaturaFinal = valorFinalDecimal;
+
+                        break;
+                    case 'CalorCombustao':
+                        model.CalorCombustaoInicial = valorInicialDecimal;
+                        model.CalorCombustaoFinal = valorFinalDecimal;
+
+                        break;
+                    case 'PressaoVapor':
+                        model.PressaoVaporInicial = valorInicialDecimal;
+                        model.PressaoVaporFinal = valorFinalDecimal;
+                        model.PressaoVaporTemperatura = valorPressaoDecimal;
+
+                        break;
+                    case 'DensidadeAbsoluta':
+                        model.DensidadeAbsolutaInicial = valorInicialDecimal;
+                        model.DensidadeAbsolutaFinal = valorFinalDecimal;
+                        model.DensidadeAbsolutaTemperatura = valorPressaoDecimal;
+                        break;
+                    case 'DensidadeRelativa':
+                        model.DensidadeRelativaInicial = valorInicialDecimal.toString().replace(",", decimalSeparator).replace(".", decimalSeparator);
+                        model.DensidadeRelativaFinal = valorFinalDecimal.toString().replace(",", decimalSeparator).replace(".", decimalSeparator);
+                        model.DensidadeRelativaTemperatura = valorPressaoDecimal.toString().replace(",", decimalSeparator).replace(".", decimalSeparator);
+                        break;
+                    case 'DensidadeVapor':
+                        model.DensidadeVaporInicial = valorInicialDecimal;
+                        model.DensidadeVaporFinal = valorFinalDecimal;
+
+                        break;
+                    case 'ViscosidadeDinamica':
+                        model.ViscosidadeDinamicaInicial = valorInicialDecimal;
+                        model.ViscosidadeDinamicaFinal = valorFinalDecimal;
+                        model.ViscosidadeDinamicaExpoente = valorPressaoDecimal;
+                        break;
+                    case 'ViscosidadeDinamicaTemperatura':
+                        model.ViscosidadeDinamicaTemperatura == valorInicialDecimal;
+                        break;
+                    case 'ViscosidadeCinematica':
+                        model.ViscosidadeCinematicaInicial = valorInicialDecimal;
+                        model.ViscosidadeCinematicaFinal = valorFinalDecimal;
+                        model.ViscosidadeCinematicaExpoente = valorPressaoDecimal;
+                        break;
+                    case 'ViscosidadeCinematicaTemperatura':
+                        model.ViscosidadeCinematicaTemperatura == valorInicialDecimal;
+                        break;
+                    case 'Solubilidade':
+                        model.SolubilidadeAguaInicial = valorInicialDecimal;
+                        model.SolubilidadeAguaFinal = valorFinalDecimal;
+                        model.SolubilidadeAguaTemperatura = valorPressaoDecimal;
+                        break;
+                    case 'CaracteristicasParticula':
+                        model.CaracteristicasParticulaInicial = valorInicialDecimal;
+                        model.CaracteristicasParticulaFinal = valorFinalDecimal;
+                        break;
+                    case 'LimiteInflamabilidadeExplosividadeVolume':
+                        model.LimiteInflamabilidadeExplosividadeVolumeInferior = valorInicialDecimal;
+                        model.LimiteInflamabilidadeExplosividadeVolumeSuperior = valorFinalDecimal;
+                        break;
+                    case 'LimiteInflamabilidadeExplosividadeDensidade':
+                        model.LimiteInflamabilidadeExplosividadeDensidadeInferior = valorInicialDecimal;
+                        model.LimiteInflamabilidadeExplosividadeDensidadeSuperior = valorFinalDecimal
+                        break;
+                    case 'PressaoVaporExpoente':
+                        model.PressaoVaporExpoente = valorInicialDecimal;
+                        break;
+                }
+            }
+
+            if ((valorInicialDecimal !== null && valorFinalDecimal !== null && parseFloat(valorInicialDecimal) >= parseFloat(valorFinalDecimal)) || (valorInicialDecimal === null && valorFinalDecimal !== null)) {
+                switch (campo) {
+                    case 'Ph': model.PhFinal = ''; break;
+                    case 'PontoFusao': model.PontoFusaoFinal = ''; break;
+                    case 'PontoEbulicao': model.PontoEbulicaoFinal = ''; break;
+                    case 'AutoIgnicao': model.AutoIgnicaoTemperaturaFinal = ''; break;
+                    case 'Decomposicao': model.DecomposicaoTemperaturaFinal = ''; break;
+                    case 'Armazenamento': model.ArmazenamentoTemperaturaFinal = ''; break;
+                    case 'CalorCombustao': model.CalorCombustaoFinal = ''; break;
+                    case 'PressaoVapor': model.PressaoVaporFinal = ''; break;
+                    case 'DensidadeAbsoluta': model.DensidadeAbsolutaFinal = ''; break;
+                    case 'DensidadeRelativa': model.DensidadeRelativaFinal = ''; break;
+                    case 'DensidadeVapor': model.DensidadeVaporFinal = ''; break;
+                    case 'ViscosidadeDinamica': model.ViscosidadeDinamicaFinal = ''; break;
+                    case 'ViscosidadeCinematica': model.ViscosidadeCinematicaFinal = ''; break;
+                    case 'Solubilidade': model.SolubilidadeAguaFinal = ''; break;
+                    case 'CaracteristicasParticula': model.CaracteristicasParticulaFinal = ''; break;
+                }
+            }
+        };
+
+    }]);
+})();
+
+var angularUtil = {
+    ValidarNomeAnexo: function (nomeArquivo, listaUploads) {
+        var nomeArquivoNovoItem = nomeArquivo.split(".").shift();
+        var formatoArquivo = nomeArquivo.split(".").pop();
+        var nomeArquivoNovo = null;
+        var possuiParenteses = false;
+
+        var quantidadeArquivosMesmoNome = 0;
+
+        var transformaNomeComParenteses = angularUtil.ValidarParenteses(nomeArquivo);
+
+        if (transformaNomeComParenteses) {
+
+            nomeArquivoNovoItem = transformaNomeComParenteses.nomeArquivoFinal;
+            possuiParenteses = true;
+
+        }
+
+        if (!possuiParenteses) {
+            if (listaUploads == null) {
+                return nomeArquivoNovoItem;
+            }
+            if (listaUploads != null) {
+                listaUploads.forEach(function (item) {
+                    if (item.RelativePath) {
+                        var nomeArquivoItem = item.RelativePath.split(".").shift();
+                        if (!nomeArquivoNovo) {
+                            if (nomeArquivoNovoItem === nomeArquivoItem) {
+                                quantidadeArquivosMesmoNome++;
+                                nomeArquivoNovo = nomeArquivoNovoItem + " (" + quantidadeArquivosMesmoNome + ")";
+                            }
+                        }
+
+                        if (nomeArquivoNovo) {
+                            listaUploads.forEach(function (item) {
+                                if (item.RelativePath) {
+                                    var nomeArquivoItem = item.RelativePath.split(".").shift();
+                                    if (nomeArquivoNovo === nomeArquivoItem) {
+                                        quantidadeArquivosMesmoNome++;
+                                        nomeArquivoNovo = nomeArquivoNovoItem + " (" + quantidadeArquivosMesmoNome + ")";
+                                    }
+                                }
+                            });
+                        }
+
+                    }
+                });
+            }
+
+        }
+
+        if (quantidadeArquivosMesmoNome > 0 && !possuiParenteses) {
+            nomeArquivoNovo = nomeArquivoNovoItem + " (" + quantidadeArquivosMesmoNome + ")." + formatoArquivo;
+        }
+
+        if (nomeArquivoNovo == null && possuiParenteses) {
+            nomeArquivoNovo = nomeArquivo.split(".").shift();
+
+            listaUploads.forEach(function (item) {
+                if (item.RelativePath) {
+                    var nomeArquivoItem = item.RelativePath.split(".").shift();
+                    if (nomeArquivoNovo === nomeArquivoItem) {
+                        transformaNomeComParenteses.numero++;
+                        nomeArquivoNovo = nomeArquivoNovoItem + " (" + transformaNomeComParenteses.numero + ")";
+                    }
+
+                    if (nomeArquivoNovo) {
+                        if (nomeArquivoNovo === nomeArquivoItem) {
+                            transformaNomeComParenteses.numero++;
+                            nomeArquivoNovo = nomeArquivoNovoItem + " (" + quantidadeArquivosMesmoNome + ")";
+
+                            listaUploads.forEach(function (item) {
+                                if (item.RelativePath) {
+                                    var nomeArquivoItem = item.RelativePath.split(".").shift();
+                                    if (nomeArquivoNovo === nomeArquivoItem) {
+                                        transformaNomeComParenteses.numero++;
+                                        nomeArquivoNovo = nomeArquivoNovoItem + " (" + transformaNomeComParenteses.numero + ")";
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            nomeArquivoNovo = nomeArquivoNovo + "." + formatoArquivo;
+        }
+
+        return nomeArquivoNovo;
+
+    },
+    ValidarParenteses: function (nomeArquivo) {
+        var nomeArquivoTemp = nomeArquivo.split(".").shift();
+
+        var formatoArquivoTemp = nomeArquivo.split(".").pop();
+
+        var rgularExp = {
+            containsAlphabet: /[a-zA-Z]/,
+        };
+
+        var expMatch = {};
+
+        var matches = nomeArquivoTemp.match(/\((.*?)\)/g);
+
+        var numberPattern = /\d+/g;
+
+        if (matches) {
+
+            if (matches.length > 1) {
+                matches = matches.pop();
+            } else {
+                matches = matches.shift();
+            }
+
+            expMatch.containsAlphabet = rgularExp.containsAlphabet.test(matches);
+
+            if (!expMatch.containsAlphabet) {
+
+                var formatoArquivoResult = angularUtil.GetStringAfterSubstring(nomeArquivo, matches);
+
+                if ("." + formatoArquivoTemp == formatoArquivoResult) {
+                    var value = Number(matches.match(numberPattern).join([]));
+
+
+                    if (typeof value == 'number') {
+                        var strValue = nomeArquivo.substring(0, (nomeArquivoTemp.length - matches.length) - 1);
+                        var nomeArquivoFinal = strValue;
+
+                        return { nomeArquivoFinal: nomeArquivoFinal, numero: value };
+                    }
+                }
+
+            }
+
+        }
+
+    },
+    GetStringAfterSubstring: function (parentString, substring) {
+        return parentString.substring(parentString.indexOf(substring) + substring.length);
+    },
+    RenomearFileName: function (originalFile, newName) {
+        return new File([originalFile], newName, {
+            type: originalFile.type,
+            lastModified: originalFile.lastModified,
+        });
+    },
+    // função que faz um apply seguro ao atualizar variáveis ou DOM quando fora do ciclo do angular
+    SafeApply: function (scope, fn) {
+        if (!scope.$$phase) {
+            return scope.$apply(fn);
+        }
+        else
+            return fn();
+    },
+    ClearObject: function (object) { // limpa objeto sem perder referencia
+        Object.keys(object).forEach(function (key) {
+            delete object[key];
+        });
+    },
+    ClearArray: function (array) { // limpa objeto sem perder referencia
+        array.splice(0, array.length);
+    },
+    // ** copia objeto por valor, serializando e desserializando
+    CopyObject: function (objectToBeCopied) {
+        return JSON.parse(JSON.stringify(objectToBeCopied));
+    },
+    CopyObjectWithoutLosingReference: function (source, target) {
+        var copiedSource = angular.copy(source);
+        angularUtil.ClearObject(target); // limpa o destino primeiro
+        $.extend(target, copiedSource); // copia os valores da origem para o destino, sem perder referência.
+    },
+    // ** encapsulamento do plugin de paginação.
+    SetPagination: function (paginationObject, paginantionHtmlElement, totalRecords, callbackPaginationFunction, maxVisible) {
+
+        paginationObject.totalRows = totalRecords;
+        paginationObject.SetTotalPages();
+
+        if (maxVisible == null) {
+            maxVisible = 10;
+        }
+        $(paginantionHtmlElement).unbind("page");
+        $(paginantionHtmlElement).bootpag({
+            total: paginationObject.totalPages,
+            page: paginationObject.page,
+            maxVisible: maxVisible,
+            leaps: true,
+            firstLastUse: true,
+            wrapClass: 'pagination',
+        }).on("page", function paginationGrid(event, num) {
+            paginationObject.page = num;
+            callbackPaginationFunction();
+        });
+
+    },
+    // ** função para converter o tipo de post do angular, para o MVC entender direito
+    ConvertAngularPostFormData: function (obj) {
+        var query = '', name, value, fullSubName, subName, subValue, innerObj, i;
+
+        for (name in obj) {
+            value = obj[name];
+
+            if (value instanceof Array) {
+                for (i = 0; i < value.length; ++i) {
+                    subValue = value[i];
+                    fullSubName = name + '[' + i + ']';
+                    innerObj = {};
+                    innerObj[fullSubName] = subValue;
+                    query += angularUtil.ConvertAngularPostFormData(innerObj) + '&';
+                }
+            }
+            else if (value instanceof Object) {
+                for (subName in value) {
+                    subValue = value[subName];
+                    fullSubName = name + '[' + subName + ']';
+                    innerObj = {};
+                    innerObj[fullSubName] = subValue;
+                    query += angularUtil.ConvertAngularPostFormData(innerObj) + '&';
+                }
+            }
+            else if (value !== undefined && value !== null)
+                query += encodeURIComponent(name) + '=' + encodeURIComponent(value) + '&';
+        }
+
+        return query.length ? query.substr(0, query.length - 1) : query;
+    },
+    SaveFileSimple: function (response) {
+        var headers = response.headers;
+        //// Get the headers
+        headers = headers();
+        // Get the filename from the x-filename header or default to "download.bin"
+        var filename = headers['x-filename'] || 'download.bin';
+        var data = response.data;
+        var url = URL.createObjectURL(new Blob([data]));
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.target = '_blank';
+        a.click();
+        return response;
+    },
+    SaveFile: function (response) {
+        //return angularUtil.SaveFileSimple(response);
+
+        var data = response.data;
+        var headers = response.headers;
+        var status = response.status;
+
+        var octetStreamMime = 'application/octet-stream';
+        var success = false;
+
+        //// Get the headers
+        headers = headers();
+
+        // Get the filename from the x-filename header or default to "download.bin"
+        var filename = headers['x-filename'] || 'download.bin';
+
+        // Determine the content type from the header or default to "application/octet-stream"
+        var contentType = headers['content-type'] || octetStreamMime;
+
+        try {
+            // Try using msSaveBlob if supported
+            console.log("Trying saveBlob method ...");
+            var blob = new Blob([data], { type: contentType });
+            if (navigator.msSaveBlob)
+                navigator.msSaveBlob(blob, filename);
+            else {
+                // Try using other saveBlob implementations, if available
+                var saveBlob = navigator.webkitSaveBlob || navigator.mozSaveBlob || navigator.saveBlob;
+                if (saveBlob === undefined) throw "Not supported";
+                saveBlob(blob, filename);
+            }
+            console.log("saveBlob succeeded");
+            success = true;
+        } catch (ex) {
+            console.log("saveBlob method failed with the following exception:");
+            console.log(ex);
+        }
+
+        if (!success) {
+            // Get the blob url creator
+            var urlCreator = window.URL || window.webkitURL || window.mozURL || window.msURL;
+            if (urlCreator) {
+                // Try to use a download link
+                var link = document.createElement('a');
+                if ('download' in link) {
+                    // Try to simulate a click
+                    try {
+                        // Prepare a blob URL
+                        console.log("Trying download link method with simulated click ...");
+                        var blob = new Blob([data], { type: contentType });
+                        var url = urlCreator.createObjectURL(blob);
+                        link.setAttribute('href', url);
+
+                        // Set the download attribute (Supported in Chrome 14+ / Firefox 20+)
+                        link.setAttribute("download", filename);
+
+                        // Simulate clicking the download link
+                        var event = document.createEvent('MouseEvents');
+                        event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+                        link.dispatchEvent(event);
+                        console.log("Download link method with simulated click succeeded");
+                        success = true;
+
+                    } catch (ex) {
+                        console.log("Download link method with simulated click failed with the following exception:");
+                        console.log(ex);
+                    }
+                }
+
+                if (!success) {
+                    // Fallback to window.location method
+                    try {
+                        // Prepare a blob URL
+                        // Use application/octet-stream when using window.location to force download
+                        console.log("Trying download link method with window.location ...");
+                        var blob = new Blob([data], { type: octetStreamMime });
+                        var url = urlCreator.createObjectURL(blob);
+                        window.location = url;
+                        console.log("Download link method with window.location succeeded");
+                        success = true;
+                    } catch (ex) {
+                        console.log("Download link method with window.location failed with the following exception:");
+                        console.log(ex);
+                    }
+                }
+
+            }
+        }
+
+        if (!success) {
+            // Fallback to window.open method
+            console.log("No methods worked for saving the arraybuffer, using last resort window.open");
+            window.open(httpPath, '_blank', '');
+        }
+    }
+
+
+}

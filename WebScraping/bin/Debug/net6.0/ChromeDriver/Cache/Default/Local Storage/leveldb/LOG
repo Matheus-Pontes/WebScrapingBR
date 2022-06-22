@@ -1,0 +1,14 @@
+2022/06/17-14:26:57.831 664 Reusing MANIFEST C:\Users\Samsung\WebScraping\bin\Debug\net6.0\ChromeDriver\Cache\Default\Local Storage\leveldb/MANIFEST-000001
+2022/06/17-14:26:57.833 664 Recovering log #178
+2022/06/17-14:26:57.834 664 Level-0 table #180: started
+2022/06/17-14:26:57.841 664 Level-0 table #180: 71136 bytes OK
+2022/06/17-14:26:57.851 664 Delete type=0 #178
+2022/06/17-14:26:57.852 12f4 Compacting 4@0 + 1@1 files
+2022/06/17-14:26:57.901 12f4 Generated table #182@0: 13 keys, 35959 bytes
+2022/06/17-14:26:57.901 12f4 Compacted 4@0 + 1@1 files => 35959 bytes
+2022/06/17-14:26:57.905 12f4 compacted to: files[ 0 1 0 0 0 0 0 ]
+2022/06/17-14:26:57.911 12f4 Delete type=2 #169
+2022/06/17-14:26:57.911 12f4 Delete type=2 #171
+2022/06/17-14:26:57.911 12f4 Delete type=2 #174
+2022/06/17-14:26:57.911 12f4 Delete type=2 #177
+2022/06/17-14:26:57.911 12f4 Delete type=2 #180

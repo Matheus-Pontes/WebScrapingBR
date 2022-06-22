@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title id="tituloHeader">SafetyChem</title>
+
+    <link runat="server" rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon" />
+    <link runat="server" rel="icon" href="/img/favicon.ico" type="image/ico" />
+
+    <link href="/css/bootstrap/bootstrap.min.css?637907581881385517" rel="stylesheet" />
+    <link href="/css/libs/dataTables.fixedHeader.css?637907581881385606" rel="stylesheet" />
+    <link href="/css/libs/dataTables.tableTools.css?637907581881385639" rel="stylesheet" />
+    <link href="/css/dataTables.bootstrap.css?637907581881385672" rel="stylesheet" />
+    <link href="/css/libs/font-awesome.css?637907581881385705" rel="stylesheet" type="text/css" />
+    <link href="/css/libs/nanoscroller.css?637907581881385743" rel="stylesheet" type="text/css" />
+    <link href="/css/compiled/theme_styles.css?637907581881385771" rel="stylesheet" />
+    <link href="/css/main.css?637907581881385809" rel="stylesheet" type="text/css" />
+    <link href="/css/libs/datepicker.css?637907581881385857" rel="stylesheet" />
+    <link href="/css/libs/bootstrap-switch.css?637907581881385893" rel="stylesheet" />
+    <link href="/css/libs/select2.css?637907581881385925" rel="stylesheet" />
+    <link href="/css/ui-lightness/jquery-ui-1.8.17.custom.css?637907581881385956" rel="stylesheet" />
+    <link href="/css/jquery.contextMenu.min.css?637907581881385986" rel="stylesheet" />
+    <link href="/css/darkMode.css?637907581881386016" rel="stylesheet" type="text/css" />
+
+    <!--[if lt IE 9]>
+        <script src="~/js/html5shiv.js?637907581881386038"></script>
+        <script src="~/js/respond.min.js?637907581881386042"></script>
+    <![endif]-->
+
+    <script src="/js/jquery.js?637907581881386052"></script>
+    <script src="/js/jquery-ui-1.8.24.js?637907581881386109"></script>
+    <script src="/js/Safetychem/JQuery/darkMode.js?637907581881386139"></script>
+    <script src="/js/signalr/dist/browser/signalr.js?637907581881386167"></script>
+    <script src="/js/bootstrap.js?637907581881386192"></script>
+    <script src="/js/demo-skin-changer.js?637907581881386215"></script>
+    <script src="/js/jquery.nanoscroller.min.js?637907581881386243"></script>
+    <script src="/js/demo.js?637907581881386270"></script>
+    <script src="/js/moment.min.js?637907581881386294"></script>
+    <script src="/js/jquery-jvectormap-1.2.2.min.js?637907581881386324"></script>
+    <script src="/js/jquery-jvectormap-world-merc-en.js?637907581881386365"></script>
+    <script src="/js/gdp-data.js?637907581881386394"></script>
+    <script src="/js/jquery.sparkline.min.js?637907581881386421"></script>
+    <script src="/js/skycons.js?637907581881386445"></script>
+    <script src="/js/json2.js?637907581881386472"></script>
+    <script src="/js/modernizr.custom.js?637907581881386498"></script>
+    <script src="/js/classie.js?637907581881386523"></script>
+    <script src="/js/modalEffects.js?637907581881386549"></script>
+    <script src="/js/scripts.js?637907581881386575"></script>
+    <script src="/js/pace.min.js?637907581881386621"></script>
+    <script src="/js/jquery.dataTables.js?637907581881386648"></script>
+    <script src="/js/jquery.maskedinput.min.js?637907581881386675"></script>
+    <script src="/js/bootstrap-datepicker.js?637907581881386702"></script>
+    <script src="/js/jquery.bootpag.js?637907581881386732"></script>
+    <script src="/js/bootstrap-switch.js?637907581881386757"></script>
+    <script src="/js/select2.min.js?637907581881386784"></script>
+    <script src="/js/smartautocomplete.js?637907581881386810"></script>
+    <script src="/js/bililiteRange.js?637907581881386850"></script>
+    <script src="/js/jquery.simulate.js?637907581881386875"></script>
+    <script src="/js/jquery.simulate.key-sequence.js?637907581881386900"></script>
+    <script src="/js/jquery.simulate.key-combo.js?637907581881386928"></script>
+    <script src="/js/jquery.simulate.drag-n-drop.js?637907581881386953"></script>
+    <script src="/js/util.js?637907581881386980"></script>
+    <script src="/js/Safetychem/JQuery/jquery.ui.position.min.js?637907581881387007"></script>
+    <script src="/js/Safetychem/JQuery/jquery.contextMenu.min.js?637907581881387032"></script>
+    <script src="/Enums/Enums"></script>
+    <script src="/js/Safetychem/JQuery/home.js?637907581881387097"></script>
+    <script src="/js/Safetychem/JQuery/notificacaoPublicada.js?637907581881387122"></script>
+
+    <!-- Angular reference -->
+    <script src="/js/angular.js?637907581881387153"></script>
+
+    <script src="/js/Scripts/angular-animate.js?637907581881387181"></script>
+    <script src="/js/angular-aria/angular-aria.min.js?637907581881387205"></script>
+    <script src="/js/angular-material/angular-material.min.js?637907581881387235"></script>
+    <script src="/js/Scripts/angular-route.min.js?637907581881387262"></script>
+    <script src="/js/angular-sanitize.js?637907581881387289"></script>
+    <script src="/js/ui-bootstrap-tpls-1.1.0.js?637907581881387332"></script>
+    <script src="/js/Safetychem/Angular/Util/jquery-angular-util.js?637907581881387362"></script>
+    <script src="/js/Safetychem/Angular/Util/angular-util.js?637907581881387388"></script>
+    <script src="/js/Safetychem/Angular/Util/angular-diretivas.js?637907581881387413"></script>
+    <script src="/js/Safetychem/Angular/Util/smartautocompleteangular.js?637907581881387438"></script>
+    <script src="/js/Safetychem/Angular/Util/toDictionary.js?637907581881387469"></script>
+    <script src="/js/Scripts/angular-ui/ui-bootstrap.min.js?637907581881387495"></script>
+    <script src="/js/Scripts/angular-ui/ui-bootstrap-tpls.min.js?637907581881387523"></script>
+</head>
+
+<body>
+
+    <div class="modal fade" id="modalVerTodasNotificacoes" tabindex="-1" role="dialog" aria-labelledby="modalVerTodasNotificacoes" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+        <div class="modal-dialog" style="left: 0%; width:800px;">
+            <div class="modal-content" id="verTodas">
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNotificacao" tabindex="-1" role="dialog" aria-labelledby="modalNotificacao" aria-hidden="true" data-keyboard="false" data-backdrop="static">
+        <div class="modal-dialog" style="left: 0%; width:800px;">
+            <div class="modal-content" id="tituloModal">
+            </div>
+        </div>
+    </div>
+    <div class="modal scale" style="z-index: 10000000" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog transparent" style="height: 100%; width: 100%; margin: 0px ! important;">
+            <div class="modal-content" style="height: 100%; width: 100%;">
+                <div class="centered">
+                    <div style="float: left; clear: left">
+                        <img style="width: 20%; height: 10%" src="/img/logo.png" />
+                    </div>
+                    <div style="float: left; clear: left; margin: 9px 0 0 0">
+                        <img src="/img/142.GIF" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="theme-wrapper">
+        <header class="navbar" id="header-navbar">
+            <div class="container" id="containerPrincipal">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 nav-no-collapse navbar-left pull-left">
+                    <div class="layout-align-center col-lg-4 col-md-4 col-sm-3 col-xs-3">
+                        <div class="nav navbar-nav pull-left col-lg-1 col-md-1 col-sm-2 col-xs-2">
+                            <button class="navbar-toggle" data-target=".navbar-ex1-collapse" data-toggle="collapse" type="button" style="padding-right: 0;">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="fa fa-bars"></span>
+                            </button>
+                        </div>
+
+                        <div class="nav navbar-nav col-lg-6 col-md-6 col-sm-6 col-xs-6" id="divPrincipal" style="text-align: center;max-width: 160px; max-height: 60px;
+                        background-color: white;">
+                            <a href="/NewSafetyChem" class="pull-center layout-align-center">
+                                <div class="logoEmp">   <img id="logoEmp" src="https://safetychemprods3sa.s3.sa-east-1.amazonaws.com/Empresas/Logotipos/15/15_72c68c.png?X-Amz-Expires=1800&amp;X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIA4K74BCPJPZJ5KRWH/20220614/sa-east-1/s3/aws4_request&amp;X-Amz-Date=20220614T020308Z&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=ab460d7040003404b7b1629b0333747ce9469de44773b9af59adc1e99283ae4b" style="background-color: white;" alt="" class="normal-logo logo-white navbar-logo" hidden /> </div>
+                            </a>
+                        </div>
+                        <div class="nav navbar-nav pull-left col-lg-4 col-md-4 col-sm-4 col-xs-4">
+                            <a href="/NewSafetyChem" id="logo">
+                                <img src="/img/logo_branco.png" alt="" class="pull-left normal-logo logo-white navbar-safetychem-logo" id="logoWhite" hidden />
+                                <img src="/img/logo.png" alt="" class="pull-left normal-logo logo-black navbar-safetychem-logo" id="logoNormal" hidden />
+                                <img src="/img/logo.png" alt="" class="small-logo pull-left hidden-xs hidden-sm hidden" style="width:160px;height:50px; margin-top:10px;" />
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="nav navbar-nav  col-lg-8 col-md-8 col-sm-9 col-xs-9">
+                        <div class="row">
+                            <div class="col-12 content-user">
+                                <div class="field-padding  navbar-cbbox">
+                                                <select id="cbxEmpresa" class="form-control col-xs-12">
+
+                                                        <option value="250">A&amp;S Technologies</option>
+                                                        <option value="653">A.F&#xE1;cil Massa Asf&#xE1;tica LTDA</option>
+                                                        <option value="629">ACTEGA do Brasil Tintas e Vernizes LTDA.</option>
+                                                        <option value="737">ACTIOIL COMERCIO PRODUTOS QUIMICOS LTDA</option>
+                                                        <option value="808">Acumuladores Moura S/A</option>
+                                                        <option value="502">ADAMI S/A MADEIRAS</option>
+                                                        <option value="680">ADEKA BRASIL REPRESENTACAO COMERCIAL LTDA</option>
+                                                        <option value="686">ADEXGROUP1 / ABDELHAFID MOKDAD</option>
+                                                        <option value="312">ADM do Brasil</option>
+                                                        <option value="84">ADRIVAN COM&#xC9;RCIO, IMPORTA&#xC7;&#xC3;O E REPRESENTA&#xC7;&#xC3;O LTDA</option>
+                                                        <option value="899">ADVICS AUTOMOTIVA LATIN AMERICA LTDA</option>
+                                                        <option value="843">AEH SERVICOS ADMINISTRATIVOS LTDA</option>
+                                                        <option value="879">AGILENT TECHNOLOGIES BRASIL LTDA</option>
+                                                        <option value="650">Agrigento Fertilizantes</option>
+                                                        <option value="767">AGRO INDUSTRIAL TARUM&#xC3; LTDA</option>
+                                                        <option value="708">AGROMANCILHA SOLU&#xC7;&#xD5;ES NATURAIS LTDA</option>
+                                                        <option value="576">Agro-sena Sementes LTDA</option>
+                                                        <option value="710">AGROTECNOLOGIA DO BRASIL</option>
+                                                        <option value="552">AJINOMOTO DO BRASIL IND&#xDA;STRIA E COMERCIO DE ALIMENTOS LTDA</option>
+                                                        <option value="177">Ajinomoto do Brasil Ind&#xFA;stria e Com&#xE9;rcio de Alimentos Ltda.</option>
+                                                        <option value="892">AJS ADESIVOS IND&#xDA;STRIA QU&#xCD;MICA LTDA</option>
+                                                        <option value="529">AKRO-PLASTIC</option>
+                                                        <option value="184">&#xC1;LCOOL SANTA CRUZ LTDA.</option>
+                                                        <option value="668">Aleusa Brasil Com&#xE9;rcio e Ind&#xFA;stria de M&#xE1;quinas EIRELI</option>
+                                                        <option value="548">ALTHAIA S/A IND&#xDA;STRIA FARMAC&#xCA;UTICA</option>
+                                                        <option value="742">AMAZON SERVICOS DE VAREJO DO BRASIL LTDA</option>
+                                                        <option value="121">AMAZONAS INDUSTRIA E COMERCIO LTDA.</option>
+                                                        <option value="462">Ambiente de testes</option>
+                                                        <option value="229">Ambiente de testes 2</option>
+                                                        <option value="92">Ambiente de testes 3</option>
+                                                        <option value="751">Ameribras Industria e Com&#xE9;rcio Ltda</option>
+                                                        <option value="455">AMERICA SALES REPRESENTATIVE INDUSTRIA E COMERCIO LTDA</option>
+                                                        <option value="574">AMGEN BIOTECNOLOGIA DO BRASIL LTDA.</option>
+                                                        <option value="467">Anglo American Min&#xE9;rio de Ferro Brasil</option>
+                                                        <option value="111">ANION QU&#xCD;MICA INDUSTRIAL S.A.</option>
+                                                        <option value="156">ANJO QUIMICA DO BRASIL LTDA</option>
+                                                        <option value="309">AP Winner Ind. e Com. de Prod. Qu&#xED;micos Ltda</option>
+                                                        <option value="861">AP Winner Ind. e Com. de Prod. Qu&#xED;micos Ltda.</option>
+                                                        <option value="578">APERAM BIOENERGIA LTDA</option>
+                                                        <option value="837">APERAM INOX AM&#xC9;RICA DO SUL S.A.</option>
+                                                        <option value="110">Apsen Farmac&#xEA;utica S/A</option>
+                                                        <option value="648">ARCELORMITTAL TUBAR&#xC3;O</option>
+                                                        <option value="572">ARGUS PRODUTOS E SISTEMAS CONTRA INCENDIO LTDA.</option>
+                                                        <option value="231">Arkema Coatex Brasil Ind&#xFA;stria e Com&#xE9;rcio LTDA</option>
+                                                        <option value="587">Aromat Produtos Qu&#xED;micos Ltda</option>
+                                                        <option value="514">Aromax</option>
+                                                        <option value="116">ARTECOLA QU&#xCD;MICA SA</option>
+                                                        <option value="633">Ashland Com&#xE9;rcio de Especialidades Qu&#xED;micas do Brasil Ltda</option>
+                                                        <option value="599">Ashland Inc.</option>
+                                                        <option value="89">Ask Produtos Qu&#xED;micos do Brasil Ltda.</option>
+                                                        <option value="771">ASM SISTEMAS PARA MONTAGEM LTDA</option>
+                                                        <option value="188">Astrazeneca do Brasil LTDA</option>
+                                                        <option value="915">ATLANTICA AGRICOLA SA</option>
+                                                        <option value="804">Aubin Limited</option>
+                                                        <option value="319">AUXITECH PRODUTOS QUIMICOS DO BRASIL LTDA</option>
+                                                        <option value="286">AVON</option>
+                                                        <option value="88">BAERLOCHER DO BRASIL S.A.</option>
+                                                        <option value="685">BAHIA MINERA&#xC7;&#xC3;O S/A</option>
+                                                        <option value="44">Bandeirante Qu&#xED;mica Ltda</option>
+                                                        <option value="641">BASF S.A. &#x2013; Divis&#xE3;o Tintas e Vernizes</option>
+                                                        <option value="232">BASTON IND&#xDA;STRIA DE AEROSS&#xD3;IS LTDA.</option>
+                                                        <option value="285">BAUMINAS &#xC1;guas</option>
+                                                        <option value="747">Bauminas Hidroazul Ind&#xFA;stria e Com&#xE9;rcio Ltda</option>
+                                                        <option value="201">BAYER S.A.</option>
+                                                        <option value="59">BBC Ind&#xFA;stria e Com&#xE9;rcio Ltda.</option>
+                                                        <option value="208">BECKMAN COULTER DO BRASIL COM. E IMP. DE PROD. DE LAB. LTDA.</option>
+                                                        <option value="521">Beiersdorf Ind&#xFA;stria e Com&#xE9;rcio Ltda</option>
+                                                        <option value="517">BERACA INGREDIENTES NATURAIS S.A.</option>
+                                                        <option value="282">BERG COMERCIAL</option>
+                                                        <option value="663">BIC AMAZ&#xD4;NIA SA</option>
+                                                        <option value="736">Bimeda Brasil S.A.</option>
+                                                        <option value="505">BINOVA AGRO INDUSTRIAL</option>
+                                                        <option value="884">BIOBEADS SOLUCOES EM POLIMEROS LTDA</option>
+                                                        <option value="228">BIOCROSS DO BRASIL FERTILIZANTES LTDA</option>
+                                                        <option value="284">BIOFRAGANE PRODUTOS QUIMICOS LTDA</option>
+                                                        <option value="172">BIOG&#xC9;NESIS BAG&#xD3; SA&#xDA;DE ANIMAL LTDA</option>
+                                                        <option value="725">BIORIGIN</option>
+                                                        <option value="187">BIOSEV BIOENERGIA S/A</option>
+                                                        <option value="746">Boehringer-Ingelheim Animal Health do Brasil Ltda</option>
+                                                        <option value="649">BOMBRIL S/A.</option>
+                                                        <option value="814">BOTICA COMERCIAL FARMACEUTICA LTDA</option>
+                                                        <option value="766">BRA DEFENSIVOS AGR&#xCD;COLAS LTDA</option>
+                                                        <option value="311">BRA DEFENSIVOS AGR&#xCD;COLAS LTDA.</option>
+                                                        <option value="626">Brainfarma Ind&#xFA;stria Qu&#xED;mica e Farmac&#xEA;utica S.A.</option>
+                                                        <option value="921">Brasil Min&#xE9;rios S.A.</option>
+                                                        <option value="887">Brasilqu&#xED;mica Ind&#xFA;stria e Com&#xE9;rcio Ltda</option>
+                                                        <option value="568">Braskem</option>
+                                                        <option value="507">BRASPINE</option>
+                                                        <option value="702">Brazilian Aeronautical Commission in Washington, D.C.</option>
+                                                        <option value="475">Brazilian Color Ind&#xFA;stria de Tintas e Vernizes Ltda.</option>
+                                                        <option value="789">BRAZILIAN KIMBERLITE CLAY COMERCIAL LTDA</option>
+                                                        <option value="183">BRENNTAG QUIMICA BRASIL LTDA</option>
+                                                        <option value="896">Bridgestone do Brasil Ind. e Com. Ltda.</option>
+                                                        <option value="912">Bucka Ind&#xFA;stria e Com&#xE9;rcio Ltda.</option>
+                                                        <option value="700">BUNGE ALIMENTOS S.A.</option>
+                                                        <option value="304">Buschle &amp; Lepper S.A.</option>
+                                                        <option value="528">Cablena do Brasil</option>
+                                                        <option value="251">CAMPOS VERDES AGROFLORESTAL LTDA</option>
+                                                        <option value="179">CANON IND&#xDA;STRIA DE MANAUS LTDA</option>
+                                                        <option value="625">CAPRI IMPORT E EXPORT LTDA</option>
+                                                        <option value="38">Capuani do Brasil S/A</option>
+                                                        <option value="891">Caramuru Alimentos S.A</option>
+                                                        <option value="67">CARGILL AGR&#xCD;COLA S/A</option>
+                                                        <option value="516">CARGILL ALIMENTOS LTDA</option>
+                                                        <option value="913">CBC - COMPANHIA BRASILEIRA DE CARTUCHOS</option>
+                                                        <option value="583">CENTRO DE TECNOLOGIA CANAVIERA</option>
+                                                        <option value="556">Cer&#xE2;mica e Velas de Igni&#xE7;&#xE3;o NGK do Brasil LTDA.</option>
+                                                        <option value="562">Ceras Johnson Ltda.</option>
+                                                        <option value="637">CEVA FREIGHT MANAGEMENT DO BRASIL LTDA</option>
+                                                        <option value="595">Ceva Sa&#xFA;de Animal Ltda.</option>
+                                                        <option value="888">CHDS DO BRASIL COM&#xC9;RCIO DE INSUMOS AGR&#xCD;COLAS LTDA</option>
+                                                        <option value="160">CHEMCARE Com&#xE9;rcio de Produtos Qu&#xED;micos e Servi&#xE7;os.</option>
+                                                        <option value="300">CHEMCARE INDUSTRIA E COMERCIO LTDA</option>
+                                                        <option value="765">CHIMICA BARUEL LTDA</option>
+                                                        <option value="306">Chimica Baruel Ltda.</option>
+                                                        <option value="586">Cimed industria de medicamentos</option>
+                                                        <option value="793">Citral &#xD3;leos Essenciais Ltda</option>
+                                                        <option value="48">CITRATUS FRAGR&#xC2;NCIAS IND&#xDA;STRIA E COM&#xC9;RCIO LTDA</option>
+                                                        <option value="617">CMOC BRASIL</option>
+                                                        <option value="299">CMPC CELULOSE RIOGRANDENSE LTDA</option>
+                                                        <option value="143">CMPC Melhoramentos Ltda.</option>
+                                                        <option value="759">COFCO INTERNATIONAL BRASIL S.A</option>
+                                                        <option value="678">COMIL COVER SAND IND&#xDA;STRIA E COM&#xC9;RCIO LTDA</option>
+                                                        <option value="543">Comiss&#xE1;ria Pibernat</option>
+                                                        <option value="750">COMPANHIA BRASILEIRA DE ALUM&#xCD;NIO</option>
+                                                        <option value="565">COMPANHIA BRASILEIRA DE ESTIRENO - UNIGEL</option>
+                                                        <option value="164">Companhia Brasileira de Metalurgia e Minera&#xE7;&#xE3;o</option>
+                                                        <option value="162">COMPANHIA NITRO QU&#xCD;MICA BRASILEIRA</option>
+                                                        <option value="681">CONDOR S.A INDUSTRIA QU&#xCD;MICA</option>
+                                                        <option value="181">COPEBRAS INDUSTRIA LTDA</option>
+                                                        <option value="791">Corning Comunica&#xE7;&#xE3;o &#xD3;pticas S.A</option>
+                                                        <option value="60">COSMOQU&#xCD;MICA IND&#xDA;STRIA E COM&#xC9;RCIO LTDA.</option>
+                                                        <option value="297">COSNOVA BRASIL COSMETICOS LTDA</option>
+                                                        <option value="907">COSTA NETO B2B COM&#xC9;RCIO E REPRESENTA&#xC7;&#xC3;O DE EMBALAGENS</option>
+                                                        <option value="522">CTG do Brasil</option>
+                                                        <option value="865">CUMMINS BRASIL LIMITADA</option>
+                                                        <option value="802">D&amp;D REP. COM. DE PRODUTOS QUIMICOS LTDA. - EPP</option>
+                                                        <option value="853">DA FEIRA AO BAILE COMERCIO DE BOLOS LT</option>
+                                                        <option value="488">DAIICHI SANKYO BRASIL FARMAC&#xCA;UTICA LTDA</option>
+                                                        <option value="622">DALEGRIA IND. COM. EIRELI EPP</option>
+                                                        <option value="620">Damarfe Produtos Qu&#xED;micos Ltda</option>
+                                                        <option value="76">DeLaval LTDA</option>
+                                                        <option value="588">Dentsply</option>
+                                                        <option value="570">Diatom Minera&#xE7;&#xE3;o Ltda</option>
+                                                        <option value="182">DMI Isolantes El&#xE9;tricos</option>
+                                                        <option value="185">D&#xF6;hler Am&#xE9;rica Latina Ltda.</option>
+                                                        <option value="262">Donaldson do Brasil Equipamentos Industriais Ltda.</option>
+                                                        <option value="144">Duas Rodas Industrial Ltda.</option>
+                                                        <option value="317">ECIL MET TEC LTDA</option>
+                                                        <option value="167">ECO BIO COMERCIO DE PRODUTOS BIOLOGICOS LTDA</option>
+                                                        <option value="883">EF Internacional Fragrance</option>
+                                                        <option value="872">ELANTAS ISOLANTES ELETRICOS DO BRASIL LTDA</option>
+                                                        <option value="260">ELEKEIROZ S.A.</option>
+                                                        <option value="46">Eletrobr&#xE1;s Eletronuclear S/A</option>
+                                                        <option value="602">Embraer ONU</option>
+                                                        <option value="276">Embraer S.A.</option>
+                                                        <option value="203">Empresa Backup</option>
+                                                        <option value="606">Empresa Backup</option>
+                                                        <option value="161">EMPRESA DE MINERA&#xC7;&#xC3;O SANTA ROSA LTDA.</option>
+                                                        <option value="47">Empresa Demonstra&#xE7;&#xE3;o</option>
+                                                        <option value="81">Empresa Demonstra&#xE7;&#xE3;o - Lite</option>
+                                                        <option value="495">Empresa teste - ADFS</option>
+                                                        <option value="157">Empresa teste - Azure AD</option>
+                                                        <option value="499">Empresa teste - Entrega</option>
+                                                        <option value="677">Empresa teste - LDAP SAML</option>
+                                                        <option value="498">Empresa teste - Lite</option>
+                                                        <option value="873">Empresa teste - M</option>
+                                                        <option value="600">Empresa teste - SC ONU</option>
+                                                        <option value="82">Empresa teste - SC Software</option>
+                                                        <option value="636">Empresa teste - Trial</option>
+                                                        <option value="893">Empresa tipo entrega teste</option>
+                                                        <option value="618">ENAEX Brasil</option>
+                                                        <option value="477">Energis 8 Agroqu&#xED;mica Ltda.</option>
+                                                        <option value="900">Envision Ind. de Produtos Eletr&#xF4;nicos Ltda.</option>
+                                                        <option value="553">ESSILOR DA AMAZ&#xD4;NIA IND E COM LTDA</option>
+                                                        <option value="293">ESTRELA QUIMICA INDUSTRIAL LTDA</option>
+                                                        <option value="840">EUROFARMA LABORATORIOS</option>
+                                                        <option value="545">EXCLUS&#xC2;O</option>
+                                                        <option value="917">FAMEX COMERCIAL IMPORTADORA E EXPORTADORA LTDA</option>
+                                                        <option value="557">FANUC South America Equipamentos de Automa&#xE7;&#xE3;o e Servi&#xE7;os Ltda</option>
+                                                        <option value="134">Farben S.A. Ind&#xFA;stria Qu&#xED;mica</option>
+                                                        <option value="676">FAV 105</option>
+                                                        <option value="87">FCC - Ind&#xFA;stria e com&#xE9;rcio Ltda</option>
+                                                        <option value="727">Fedrigoni Brasil Pap&#xE9;is</option>
+                                                        <option value="857">Feedis Ind&#xFA;stria e Com&#xE9;rcio.</option>
+                                                        <option value="298">FENIX AGRO-PECUS INDUSTRIAL LTDA.</option>
+                                                        <option value="193">FERTILIZANTES HERINGER S.A.</option>
+                                                        <option value="310">FERTILIZANTES TOCANTINS S.A</option>
+                                                        <option value="235">FERTIPAR FERTILIZANTES DO PARAN&#xC1; LTDA</option>
+                                                        <option value="655">FIL Group Transporte Internacional Ltda</option>
+                                                        <option value="684">FLEXIVEL INDUSTRIA E COMERCIO LTDA.</option>
+                                                        <option value="180">FLOR E AROME IND&#xDA;STRIA E COM&#xC9;RCIO DE PRODUTOS QUIMICOS LTDA.</option>
+                                                        <option value="743">Florpinus Ind&#xFA;stria Qu&#xED;mica Ltda</option>
+                                                        <option value="115">FORMILINE IND&#xDA;STRIA DE LAMINADOS LTDA.</option>
+                                                        <option value="523">FORTAL QUIMICA IND. E COM. S.A.</option>
+                                                        <option value="278">Foseco Industrial e Comercial Ltda</option>
+                                                        <option value="667">FRANSFLOR AROMATIZANTES LTDA</option>
+                                                        <option value="510">Freedom cosm&#xE9;ticos</option>
+                                                        <option value="640">FREMONT INDUSTRIAL E COMECIAL LTDA</option>
+                                                        <option value="749">Frigelar Com&#xE9;rcio e Ind&#xFA;stria LTDA</option>
+                                                        <option value="169">Frutarom do Brasil Ind&#xFA;stria e Com&#xE9;rcio Ltda.</option>
+                                                        <option value="120">FUCHS LUBRIFICANTES DO BRASIL LTDA.</option>
+                                                        <option value="91">Gates do Brasil Com&#xE9;rcio e Ind&#xFA;stria LTDA</option>
+                                                        <option value="503">GDBR IND&#xDA;STRIA E COMERCIO DE COMPONENTES QUIMICOS E DE BORRACHA LTDA.</option>
+                                                        <option value="577">GE - GEVISA</option>
+                                                        <option value="108">GE Healthcare do Brasil</option>
+                                                        <option value="720">Gerais Tecnologia e Solu&#xE7;&#xF5;es Ltda</option>
+                                                        <option value="842">GERDAU A&#xC7;OMINAS S.A.</option>
+                                                        <option value="748">GERDAU GRAFENO LTDA</option>
+                                                        <option value="683">GINGER FRAGRANCES &amp; INGREDIENTS INDUSTRIA E COMERCIO EIRELI</option>
+                                                        <option value="827">GLENMARK FARMACEUTICA LTDA</option>
+                                                        <option value="532">GLOBAL PROJECT SERVICES</option>
+                                                        <option value="735">GO BR SOLUTIONS</option>
+                                                        <option value="291">Goodyear do Brasil Produtos de Borracha LTDA</option>
+                                                        <option value="258">GRACO DO BRASIL</option>
+                                                        <option value="544">GRECA ASFALTOS</option>
+                                                        <option value="796">GRUPO ELO LOGISTICS</option>
+                                                        <option value="628">Grupo Isorecort</option>
+                                                        <option value="542">GTNH INDUSTRIA E COM&#xC9;RCIO DE CARV&#xC3;O LTDA</option>
+                                                        <option value="740">Harsco Minerais LTDA</option>
+                                                        <option value="520">Helm do Brasil Mercantil Ltda.</option>
+                                                        <option value="607">Henkel</option>
+                                                        <option value="688">HENKEL LTDA</option>
+                                                        <option value="527">HENKEL LTDA.</option>
+                                                        <option value="810">HF Ind&#xFA;stria Qu&#xED;mica Ltda</option>
+                                                        <option value="559">HONEYWELL IND&#xDA;STRIA DE TECNOLOGIA LTDA</option>
+                                                        <option value="575">Hospital Israelita Albert Einstein</option>
+                                                        <option value="813">HUANGYAN ZHEDONG RUBBER AUXILIARY IMP. &amp; EXP. CO., LTD</option>
+                                                        <option value="639">Hubei BlueSky New Material Inc.</option>
+                                                        <option value="874">Hydor Tecnologia em Sistema Contra Inc&#xEA;ndio LTDA</option>
+                                                        <option value="671">HYDRO EXTRUSION BRASIL S/A</option>
+                                                        <option value="491">ICONIC Lubrificantes S.A.</option>
+                                                        <option value="870">IDEMITSU LUBE SOUTH AMERICA LTDA</option>
+                                                        <option value="138">Imerys do Brasil Comercio de Extra&#xE7;&#xE3;o de Min&#xE9;rios Ltda</option>
+                                                        <option value="137">Imerys do Brasil Com&#xE9;rcio de Extra&#xE7;&#xE3;o de Min&#xE9;rios LTDA</option>
+                                                        <option value="145">Imerys Fused Minerals Salto Ltda.</option>
+                                                        <option value="139">Imerys Rio Capim Caulim S.A e Par&#xE1; Pigmentos S.A</option>
+                                                        <option value="61">IMERYS STEELCASTING DO BRASIL LTDA</option>
+                                                        <option value="590">Impextraco NV</option>
+                                                        <option value="564">INCASA S/A</option>
+                                                        <option value="787">INCREMENTHA</option>
+                                                        <option value="728">INDUSBELLO IND. E COM. DE PRODUTOS M&#xC9;DICOS ODONTOL&#xD3;GICOS LTDA.</option>
+                                                        <option value="898">Ind&#xFA;stria e Com&#xE9;rcio de Produtos de Beleza Yam&#xE1; Ltda</option>
+                                                        <option value="867">IND&#xDA;STRIA MISSIATO DE BEBIDAS LTDA</option>
+                                                        <option value="806">Industria Qu&#xED;mica Anast&#xE1;cio</option>
+                                                        <option value="117">Ind&#xFA;stria Qu&#xED;mica River Eireli</option>
+                                                        <option value="605">INEOS Composites</option>
+                                                        <option value="533">INEOS Composites.</option>
+                                                        <option value="526">INGLEZA IND&#xDA;STRIA DE PRODUTOS DE LIMPEZA E COSM&#xC9;TICOS LTDA</option>
+                                                        <option value="709">Intercroma S/A</option>
+                                                        <option value="15" selected="selected">INTERTOX</option>
+                                                        <option value="665">ISK BIOSCIENCES DO BRASIL DEFENSIVOS AGRICOLAS LTDA</option>
+                                                        <option value="513">ISP do Brasil</option>
+                                                        <option value="90">Jimo Qu&#xED;mica Industrial Ltda.</option>
+                                                        <option value="723">JLW Eletromax</option>
+                                                        <option value="540">JOYSON SAFETY SYSTEMS BRASIL LTDA</option>
+                                                        <option value="171">K11 Comercial LTDA-ME</option>
+                                                        <option value="579">KAO BRASIL LTDA.</option>
+                                                        <option value="826">Kao Specialties Americas LLC</option>
+                                                        <option value="77">KARINA IND&#xDA;STRIA E COM&#xC9;RCIO DE PL&#xC1;STICOS LTDA</option>
+                                                        <option value="295">KATION RAIDEN DO BRASIL LTDA</option>
+                                                        <option value="601">Key Safety Systems Inc.</option>
+                                                        <option value="773">Khol Com&#xE9;rcio LTDA.</option>
+                                                        <option value="916">Kidde Brasil Ltda.</option>
+                                                        <option value="303">KIKO COSMETICS BRASIL LTDA</option>
+                                                        <option value="66">KILLING S. A. TINTAS E ADESIVOS</option>
+                                                        <option value="307">Kimberlit Agroci&#xEA;ncias</option>
+                                                        <option value="549">Kimberly-Clark Brasil Ind. e Com. de Produtos de Higiene Ltda.</option>
+                                                        <option value="206">Kinross Brasil Minera&#xE7;&#xE3;o</option>
+                                                        <option value="525">Klabin S.A.</option>
+                                                        <option value="555">Klabin SA</option>
+                                                        <option value="515">KOENIG &amp; BAUER DO BRASIL</option>
+                                                        <option value="902">Kroten tintas</option>
+                                                        <option value="259">KURARAY SOUTH AMERICA LTDA.</option>
+                                                        <option value="308">L.A. Falc&#xE3;o Bauer Centro Tecnol&#xF3;gico de Controle da Qualidade LTDA</option>
+                                                        <option value="696">Labnews Industrial Ltda</option>
+                                                        <option value="551">LABORAT&#xD3;RIOS B. BRAUN S.A.</option>
+                                                        <option value="854">Laborat&#xF3;rios B.Braun S/A</option>
+                                                        <option value="695">Laborat&#xF3;rios Calbos Ltda</option>
+                                                        <option value="914">LAIS APARECIDA BALDASSO 36734809870</option>
+                                                        <option value="627">LANDIS &#x2B; GYR</option>
+                                                        <option value="290">Leica do Brasil Importa&#xE7;&#xE3;o e Com&#xE9;rcio Ltda</option>
+                                                        <option value="724">LEV TERMOPL&#xC1;STICOS LTDA.</option>
+                                                        <option value="830">LIEBHERR AEROSPACE BRASIL IND COM EQUIP AERON&#xC1;UTICOS EIRELI</option>
+                                                        <option value="150">Limne Ind. e Com&#xE9;rcio Ltda</option>
+                                                        <option value="519">LINCOLN ELECTRIC DO BRASIL IND. E COM. LTDA</option>
+                                                        <option value="506">Lindoiano Fontes De Aguas Minerais - Eireli</option>
+                                                        <option value="694">Link Pl&#xE1;sticos Ltda</option>
+                                                        <option value="774">L&#xED;rios do Valle Fragr&#xE2;ncias Ltda</option>
+                                                        <option value="738">LRB INDUSTRIA E COMERCIO DE PRODUTOS QUIMICOS LTDA</option>
+                                                        <option value="672">LUBRIZOL DO BRASIL ADITIVOS LTDA</option>
+                                                        <option value="569">Lucas Meyer Cosmetics &#x2013; IFF Ess&#xEA;ncias e Fragr&#xE2;ncias LTDA</option>
+                                                        <option value="744">Luguez Industria e Comercio Eireli</option>
+                                                        <option value="102">LUKSNOVA S/A IND&#xDA;STRIA E COM&#xC9;RCIO</option>
+                                                        <option value="647">Lwart Solu&#xE7;&#xF5;es Ambientais LTDA</option>
+                                                        <option value="611">Magnesita Refrat&#xE1;rios S.A.</option>
+                                                        <option value="223">MARJAN IND&#xDA;STRIA COM&#xC9;RCIO LTDA</option>
+                                                        <option value="581">MARUBENI</option>
+                                                        <option value="176">Masisa do Brasil Ltda</option>
+                                                        <option value="524">MEDIPRO BRASIL LTDA</option>
+                                                        <option value="537">MERCEDES-BENZ SAO BERNARDO DO CAMPO</option>
+                                                        <option value="62">Metso Paper South America Ltda.</option>
+                                                        <option value="662">MICRO-QU&#xCD;MICA PRODUTOS PARA LABORAT&#xD3;RIOS LTDA</option>
+                                                        <option value="805">Minera&#xE7;&#xE3;o Matheus Leme Ltda</option>
+                                                        <option value="191">Minera&#xE7;&#xE3;o Santa Elina Ind. e Com. S/A</option>
+                                                        <option value="698">Minera&#xE7;&#xE3;o Vale Verde do Brasil LTDA.</option>
+                                                        <option value="612">MITSUI &amp; CO. (BRASIL) S.A.</option>
+                                                        <option value="660">MONSANTO DO BRASIL LTDA</option>
+                                                        <option value="68">MONSANTO DO BRASIL LTDA.</option>
+                                                        <option value="613">MONSTER ENERGY BRASIL COM&#xC9;RCIO DE BEBIDAS LTDA.</option>
+                                                        <option value="869">Morqu&#xED;mica Ind&#xFA;stria e Com&#xE9;rcio LTDA</option>
+                                                        <option value="480">Mosaic Fertilizantes P&amp;K LTDA - Complexo Industrial de Uberaba</option>
+                                                        <option value="547">MOTOROLA MOBILITY COMERCIO DE PRODUTOS ELETRONICOS LTDA</option>
+                                                        <option value="745">MOTRAN</option>
+                                                        <option value="741">Mulching Six do Brasil Ind. E Com&#xE9;rcio de Corretivos LTDA</option>
+                                                        <option value="589">MULTIPACK PRODUTOS QU&#xCD;MICOS IND&#xDA;STRIA E COM&#xC9;RCIO LTDA</option>
+                                                        <option value="168">Nanovec Brasil</option>
+                                                        <option value="877">NATIQUE INDUSTRIA E COMERCIO LTDA.</option>
+                                                        <option value="594">NATRIO</option>
+                                                        <option value="584">NATURA COSM&#xC9;TICOS S/A</option>
+                                                        <option value="538">NEOVIA NUTRICAO E SAUDE ANIMAL LTDA</option>
+                                                        <option value="673">NEW SAFETY COM E INST DE EQUIP CONTRA INCENDIO LTDA EPP</option>
+                                                        <option value="173">Nicepel Produtos Qu&#xED;micos Ltda</option>
+                                                        <option value="631">NICHINO DO BRASIL AGROQUIMICOS LTDA</option>
+                                                        <option value="604">NORTOX S.A.</option>
+                                                        <option value="666">NOVARTIS BIOCI&#xCA;NCIAS S/A</option>
+                                                        <option value="149">Novo Nordisk Produ&#xE7;&#xE3;o Farmac&#xEA;utica do Brasil</option>
+                                                        <option value="706">NOVOZYMES LATIN AMERICA LTDA</option>
+                                                        <option value="107">NS BRAZIL TECNOLOGIA EM PISOS E REVESTIMENTOS LTDA.</option>
+                                                        <option value="642">Nutrien Solu&#xE7;&#xF5;es Agr&#xED;colas Ltda.</option>
+                                                        <option value="225">Oceanair Linhas A&#xE9;reas S/A</option>
+                                                        <option value="302">Olympus Optical do Brasil Ltda</option>
+                                                        <option value="682">Opersan Res&#xED;duos Industriais S/A</option>
+                                                        <option value="234">ORBI QUIMICA S/A</option>
+                                                        <option value="711">ORGANON FARMACEUTICA LTDA</option>
+                                                        <option value="69">Oswaldo Cruz Qu&#xED;mica Ind e Com. Ltda.</option>
+                                                        <option value="233">OURO FINO SA&#xDA;DE ANIMAL LTDA.</option>
+                                                        <option value="158">Ouro Verdde Ind&#xFA;stria de Artefatos de Metais</option>
+                                                        <option value="227">Oxiqu&#xED;mica Agroci&#xEA;ncia Ltda</option>
+                                                        <option value="739">OXON BRASIL DEFENSIVOS AGR&#xCD;COLAS LTDA</option>
+                                                        <option value="147">Para Pigmentos S/A</option>
+                                                        <option value="230">PAVANI COMERCIO DE PRODUTOS AGRICOLA</option>
+                                                        <option value="518">PAVPRONTO COMERCIO E T&#xC9;CNOLOGIA EM ASFALTOS LTDA</option>
+                                                        <option value="78">PERTECH DO BRASIL LTDA</option>
+                                                        <option value="670">PERTERRA INSUMOS AGROPECUARIOS S.A.</option>
+                                                        <option value="114">Petrobras Distribuidora S.A.</option>
+                                                        <option value="919">Petr&#xF3;leo Brasileiro S. A.</option>
+                                                        <option value="296">PETROPLUS SUL COMERCIO EXTERIOR LTDA</option>
+                                                        <option value="615">Pilarquim BR Comercial Ltda.</option>
+                                                        <option value="531">PMAN SERVI&#xC7;OS REPRESENTA&#xC7;&#xD5;ES COM. E IND. LTDA</option>
+                                                        <option value="756">POOLT&#xC9;CNICA QU&#xCD;MICA LTDA</option>
+                                                        <option value="509">PQ SILICAS BRAZIL LTDA</option>
+                                                        <option value="292">PQ Silicas Brazil Ltda</option>
+                                                        <option value="838">PQ Silicas Brazil Ltda.</option>
+                                                        <option value="472">Prentiss Qu&#xED;mica Ltda.</option>
+                                                        <option value="573">PRESSERV DO BRASIL LTDA</option>
+                                                        <option value="909">PRIMARY PRODUCTS INGREDIENTS BRASIL S.A</option>
+                                                        <option value="610">PRODUZA FOODS</option>
+                                                        <option value="591">PROLEC GE BRASIL TRANSMISS&#xC3;O DE ENERGIA SA</option>
+                                                        <option value="64">ProServ Quimica Ltda</option>
+                                                        <option value="561">Provivi do Brasil Servi&#xE7;os Agr&#xED;colas Ltda.</option>
+                                                        <option value="74">Purcom Qu&#xED;mica Ltda.</option>
+                                                        <option value="493">QUANTIQ DISTRIBUIDORA LTDA</option>
+                                                        <option value="658">QUATTROR COMERCIAL LTDA</option>
+                                                        <option value="101">Quimesp Qu&#xED;mica Ltda</option>
+                                                        <option value="630">Qu&#xED;mica Amparo LTDA</option>
+                                                        <option value="86">Quimilac Qu&#xED;mica Ltda.</option>
+                                                        <option value="880">QUIMIWAY IND&#xDA;STRIA QU&#xCD;MICA LTDA</option>
+                                                        <option value="318">QUIMIWAY IND&#xDA;STRIA QU&#xCD;MICA LTDA.</option>
+                                                        <option value="301">Rainbow Defensivos Agr&#xED;colas Ltda.</option>
+                                                        <option value="701">RAIZLER MAGN&#xC9;TICOS</option>
+                                                        <option value="863">Razzo Ltda.</option>
+                                                        <option value="860">Reckitt Benckiser Brasil LTDA.</option>
+                                                        <option value="603">Refinaria de Petr&#xF3;leo Riograndense S.A</option>
+                                                        <option value="624">Refinaria de Petr&#xF3;leo Riograndense S.A.</option>
+                                                        <option value="170">REI &#x2013; INDUSTRIA E COM&#xC9;RCIO DE ABRASIVOS LTDA</option>
+                                                        <option value="52">Renner Sayerlack S.A - Unidade Sayerlack</option>
+                                                        <option value="153">RESICOLOR INDUSTRIA DE PRODUTOS QUIMICOS LTDA.</option>
+                                                        <option value="261">Retilox Qu&#xED;mica Especial Ltda.</option>
+                                                        <option value="632">Robert Bosch Ltda</option>
+                                                        <option value="165">Robert Bosch Ltda (Safety)</option>
+                                                        <option value="464">Robertet do Brasil, Ind. Com. LTDA</option>
+                                                        <option value="252">ROMA BIOTEC INDUSTRIA E COMERCIO LTDA</option>
+                                                        <option value="207">Rosangela Francesconi Pereira ME</option>
+                                                        <option value="669">RUBBER FLEX INDUSTRIA E COM&#xC9;RCIO LTDA</option>
+                                                        <option value="204">Rudolf Soft Ind&#xFA;stria Qu&#xED;mica Ltda.</option>
+                                                        <option value="841">SABAR&#xC1; QU&#xCD;MICOS E INGREDIENTES</option>
+                                                        <option value="85">Saint-Gobain do Brasil Produtos Industriais e para Constru&#xE7;&#xE3;o Ltda.</option>
+                                                        <option value="864">Samarco Minera&#xE7;&#xE3;o S/A</option>
+                                                        <option value="862">Sapo Saneamento Ambiental Projetos e Opera&#xE7;&#xF5;es Ltda</option>
+                                                        <option value="41">SAVOY IND&#xDA;STRIA DE COSM&#xC9;TICOS S.A</option>
+                                                        <option value="512">Scania</option>
+                                                        <option value="844">SCHNEIDER RESEARCH</option>
+                                                        <option value="908">sdadsaffdasfsd</option>
+                                                        <option value="768">SEALED AIR</option>
+                                                        <option value="195">SEJE COM&#xC9;RCIO DE PRODUTOS QU&#xCD;MICOS E PECUARIOS LTDA-EPP</option>
+                                                        <option value="194">SENSIENT COSMETIC TECHNOLOGIES E CORANTES, IMPORTA&#xC7;&#xC3;O E EXPORTA&#xC7;&#xC3;O DO BRASIL LTDA.</option>
+                                                        <option value="643">Setup Automa&#xE7;&#xE3;o e Controle de Processos Ltda</option>
+                                                        <option value="582">SIBELCO - Unidade Jarinu</option>
+                                                        <option value="100">SIEGWERK BRASIL INDUSTRIA DE TINTAS LTDA</option>
+                                                        <option value="608">Siemens LTDA.</option>
+                                                        <option value="794">SINO PROMISE BRASIL COM. DE MATERIAL FOTOGR&#xC1;FICO E SERVI&#xC7;OS LTDA</option>
+                                                        <option value="623">SIOX IND. COM. E BENEF. DE MIN&#xC9;RIOS LTDA.</option>
+                                                        <option value="550">SIPCAM JARDIM BRASIL LTDA</option>
+                                                        <option value="315">Sipcam Jardim Brasil Ltda.</option>
+                                                        <option value="852">SOLENIS ESPECIALIDADES QUIMICAS LTDA</option>
+                                                        <option value="103">Solenis Tecnologias Qu&#xED;micas Ltda.</option>
+                                                        <option value="903">SOUS LE MANTEAU CER&#xC2;MICA LTDA</option>
+                                                        <option value="136">Spark Lubrificantes EIRELI</option>
+                                                        <option value="885">SPGPrints Brasil Ltda.</option>
+                                                        <option value="592">Starligas - Com&#xE9;rcio Importa&#xE7;&#xE3;o e Exporta&#xE7;&#xE3;o de Ferroligas Ltda.</option>
+                                                        <option value="567">STARRETT IND&#xDA;STRIA E COM&#xC9;RCIO LTDA.</option>
+                                                        <option value="763">Steris Solutions do Brasil Importa&#xE7;&#xE3;o e Comercializa&#xE7;&#xE3;o de Produtos da Sa&#xFA;de Ltda</option>
+                                                        <option value="776">Stra Neg&#xF3;cios em Sa&#xFA;de e Bem Estar Ltda</option>
+                                                        <option value="535">SUCORRICO CITRUS INDUSTRIAL E AGR&#xCD;COLA LTDA.</option>
+                                                        <option value="104">Sumitomo Chemical Brasil Ind&#xFA;stria Qu&#xED;mica S.A</option>
+                                                        <option value="616">Suzano S/A.</option>
+                                                        <option value="122">SYNGENTA PROTE&#xC7;&#xC3;O DE CULTIVOS LTDA</option>
+                                                        <option value="53">Syngenta Prote&#xE7;&#xE3;o de Cultivos Ltda</option>
+                                                        <option value="313">T.W. ESPUMAS LTDA.</option>
+                                                        <option value="174">TAGMA BRASIL Ltda</option>
+                                                        <option value="492">TAKASAGO FRAGR&#xC2;NCIAS E AROMAS LTDA</option>
+                                                        <option value="205">TAM LINHAS A&#xC9;REAS S/A.</option>
+                                                        <option value="530">TAMARANA TECNOLOGIA E SOLU&#xC7;&#xD5;ES AMBIENTAIS LTDA.</option>
+                                                        <option value="705">TANAC S/A</option>
+                                                        <option value="54">Tanqu&#xED;mica Ind. e Com. Ltda</option>
+                                                        <option value="722">TD Trading</option>
+                                                        <option value="135">Tecbril Ind&#xFA;stria e Com&#xE9;rcio de Tintas Ltda</option>
+                                                        <option value="656">TECNOVAL LAMINADOS PL&#xC1;STICOS LTDA</option>
+                                                        <option value="461">TERNIUM BRASIL LTDA</option>
+                                                        <option value="894">teste cria&#xE7;&#xE3;o empresa</option>
+                                                        <option value="807">Teste trial 2</option>
+                                                        <option value="597">Teste-Demonstra&#xE7;&#xE3;o</option>
+                                                        <option value="178">TEVA FARMAC&#xCA;UTICA LTDA. - BRASIL.</option>
+                                                        <option value="664">THESEO SAUDE ANIMAL LTDA</option>
+                                                        <option value="476">ThreeBond do Brasil Ind&#xFA;stria e Com&#xE9;rcio Ltda.</option>
+                                                        <option value="679">TICONA POLYMERS LTDA</option>
+                                                        <option value="471">Tide do Brasil Ltda.</option>
+                                                        <option value="566">TIMAC Agro Com&#xE9;rcio e Ind&#xFA;stria de Fertilizantes LTDA</option>
+                                                        <option value="49">Tintas Hidracor S/A</option>
+                                                        <option value="73">Titan Pneus do Brasil Ltda</option>
+                                                        <option value="489">TNS Nanotecnologia LTDA</option>
+                                                        <option value="911">TPA TECNOLOGIA DE IMPRESSAO DIGITAL COMERCIO E SERVICOS LTD</option>
+                                                        <option value="546">TRADECORP DO BRASIL</option>
+                                                        <option value="882">Tradecorp do Brasil Com&#xE9;rcio de Insumos Agr&#xED;colas Ltda.</option>
+                                                        <option value="65">TRAMONTINA S.A. CUTELARIA</option>
+                                                        <option value="836">TRANE TECHNOLOGIES IND COM SERV AR-COND LTDA</option>
+                                                        <option value="621">Tratho Metal Qu&#xED;mica</option>
+                                                        <option value="839">Trelleborg Wheel Systems Brasil Industria E Comercio De Borrachas E Polimeros Ltda.</option>
+                                                        <option value="80">Trichem Brasil Com&#xE9;rcio de Produtos Qu&#xED;micos Eireli</option>
+                                                        <option value="501">TRW Automotive</option>
+                                                        <option value="809">UMICORE BRASIL LTDA</option>
+                                                        <option value="598">UMICORE BRASIL LTDA.</option>
+                                                        <option value="825">UNAX OFFSHORE</option>
+                                                        <option value="920">Uni Refrigera&#xE7;&#xE3;o Brasil Ltda</option>
+                                                        <option value="558">Uni&#xE3;o Qu&#xED;mica Farmac&#xEA;utica Nacional S/A</option>
+                                                        <option value="508">Unitech Comercial de Instrumentos Eireli - EPP</option>
+                                                        <option value="166">UNITED STATES PHARMACOPEIA BRASIL LTDA.</option>
+                                                        <option value="43">Univar Brasil Ltda.</option>
+                                                        <option value="895">Universidade Estadual de Ponta Grossa</option>
+                                                        <option value="596">USINA FORTALEZA INDUSTRIA E COM&#xC9;RCIO DE MASSA FINA LTDA.</option>
+                                                        <option value="729">USINA SANTA AD&#xC9;LIA S/A</option>
+                                                        <option value="878">USINA S&#xC3;O FRANCISCO S/A</option>
+                                                        <option value="699">VALOREN RECUPERADORA DE RESIDUOS LTDA-EPP</option>
+                                                        <option value="500">VANSIL IND COM E REPRESENTACOES LT</option>
+                                                        <option value="560">VANTAGE SPECIALTY CHEMICALS INSUMOS COSM&#xC9;TICOS E FARMAC&#xCA;UTICOS LTDA.</option>
+                                                        <option value="249">VEOX TANNING &amp; FINISHING</option>
+                                                        <option value="692">VERSATTO UK LLP</option>
+                                                        <option value="316">VESUVIUS REFRAT&#xC1;RIOS Ltda.</option>
+                                                        <option value="897">vivian cristina pietrobon orsolini</option>
+                                                        <option value="504">VOLLMENS FRAGRANCES LTDA</option>
+                                                        <option value="674">VOLVO DO BRASIL VE&#xCD;CULOS LTDA</option>
+                                                        <option value="634">Votorantim Cimentos S/A</option>
+                                                        <option value="222">VWR Produtos e Solu&#xE7;&#xF5;es para Laborat&#xF3;rios Ltda.</option>
+                                                        <option value="868">WALTER IND&#xDA;STRIA E COM&#xC9;RCIO LTDA.</option>
+                                                        <option value="675">WEILBURGER BRASIL</option>
+                                                        <option value="539">WORLD CARGO</option>
+                                                        <option value="593">YKK DO BRASIL</option>
+                                                        <option value="772">YKK DO BRASIL LTDA.</option>
+                                                        <option value="79">YUSHIRO DO BRASIL IND&#xDA;STRIA QU&#xCD;MICA LTDA.</option>
+                                                </select>
+                                </div>
+                                <div class="nav-no-collapse pull-left col-lg-1 " id="header-notificacoes" style="padding-left:2%">
+                                    <ul class="nav navbar-nav pull-left" style="float: left!important;">
+
+                                        <li class="dropdown profile-dropdown">
+                                            <a href="#" data-toggle="dropdown" class="action-user" style="width: 5rem !important;">
+                                                <span class="fa-stack fa-lg" id="countId" style="margin-top: 10px; width: 100%;">
+                                                    <i class="fa fa-bell fa-stack-1x" style="padding-left:10px"></i>
+                                                </span>
+                                            </a>
+                                            <ul class="dropdown-menu dropdown-menu-right" id="listaNoti">
+
+                                                <li id="novasNotificacoes"> <p class="textoNovasNotificacao">Voc&#xEA; tem novas notifica&#xE7;&#xF5;es</p></li>
+
+                                                <li id="naoTemNovasNotificacoes"> <p class="textoNovasNotificacao"> N&#xE3;o h&#xE1; novas notifica&#xE7;&#xF5;es</p> </li>
+
+
+                                                    <li id="16">
+                                                        <br />
+                                                        <a href="#">
+                                                                <div class="16">
+                                                                    <span>
+                                                                        <b> Boletim Informativo:Atualiza&#xE7;&#xE3;o 9&#xAA; rev Purple Book</b>
+                                                                    </span>
+                                                                </div>
+
+
+                                                            <i class="fa fa-calendar" style="margin-left: 80px;"></i><span style="margin-left: 100px;"> 03/06/2022 </span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="14">
+                                                        <br />
+                                                        <a href="#">
+                                                                <div>
+                                                                    <p>
+                                                                        Upgrade Base de subst&#xE2;ncias no SafetyChem!
+                                                                    </p>
+                                                                </div>
+
+
+                                                            <i class="fa fa-calendar" style="margin-left: 80px;"></i><span style="margin-left: 100px;"> 10/02/2022 </span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="13">
+                                                        <br />
+                                                        <a href="#">
+                                                                <div>
+                                                                    <p>
+                                                                        Boletim Informativo - Feriado municipal
+                                                                    </p>
+                                                                </div>
+
+
+                                                            <i class="fa fa-calendar" style="margin-left: 80px;"></i><span style="margin-left: 100px;"> 21/01/2022 </span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="12">
+                                                        <br />
+                                                        <a href="#">
+                                                                <div>
+                                                                    <p>
+                                                                        Boletim Informativo: Atualiza&#xE7;&#xE3;o NR-07
+                                                                    </p>
+                                                                </div>
+
+
+                                                            <i class="fa fa-calendar" style="margin-left: 80px;"></i><span style="margin-left: 100px;"> 13/01/2022 </span>
+                                                        </a>
+                                                    </li>
+                                                    <li id="9">
+                                                        <br />
+                                                        <a href="#">
+                                                                <div>
+                                                                    <p>
+                                                                        Boletim informativo &#x2013; Expediente Final de Ano
+                                                                    </p>
+                                                                </div>
+
+
+                                                            <i class="fa fa-calendar" style="margin-left: 80px;"></i><span style="margin-left: 100px;"> 28/11/2021 </span>
+                                                        </a>
+                                                    </li>
+                                                    <li class="verTodasNotificacoes"> <a href="#" id="verTodasNoti"> <p class="textoNotificacao">Ver todas as notifica&#xE7;&#xF5;es</p></a> </li>
+
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="nav-no-collapse" id="header-nav">
+                                    <ul class="nav navbar-nav pull-left" style="float: left!important;">
+
+                                        <li class="dropdown profile-dropdown">
+                                            <a href="#" class="dropdown-toggle " data-toggle="dropdown" style="padding-right:0px;display: inline-flex;">
+                                                <i class="fa fa-user" style="padding-right: 5px; font-size: 18px; padding-top: 9px;"></i>
+                                                <span class=" user-name">
+                                                    m.pontes@intertox.com.br
+
+                                                </span> <b class="caret" style="margin-top: 13px;"></b>
+                                            </a>
+                                            <ul class="dropdown-menu dropdown-menu-right">
+                                                <li>
+                                                    <a id="temaOpcao" href="javascript:void(0)">
+                                                        <i class="fa fa-sun-o"> </i>
+                                                        <i class="fa fa-moon-o"> </i>
+                                                        <span class="temaClaro"> Tema Claro</span>
+
+                                                        <span class="temaEscuro">Tema Escuro</span>
+                                                    </a>
+
+                                                </li>
+
+                                                <li>
+                                                    <a id="logOut" href="#">
+                                                        <i class="fa fa-power-off"></i>
+                                                        Sair
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div id="page-wrapper" class="container">
+            <div class="row" id="spaceEmpty">
+                <div id="nav-col">
+                    <section id="col-left" class="col-left-nano">
+                        <div id="col-left-inner" class="col-left-nano-content">
+
+
+                            <div id="sidebar-nav" class="collapse navbar-collapse navbar-ex1-collapse">
+                            </div>
+                        </div>
+                    </section>
+                    <div id="nav-col-submenu"></div>
+                </div>
+                <div id="content-wrapper">
+
+
+
+                    
+<header>    
+    <script src="/js/SafetyChem/Angular/js_home.min.js"></script>    
+</header>
+
+<div data-ng-app="home" class="row" ng-cloak>
+    <div data-ng-controller="MainController as ctrlHome">
+        <comunicado-titulo ctrl-doc="ctrlHome">
+        </comunicado-titulo>
+        <!--#region Breadcrumb-->
+        <div>
+            <div class="col-xs-12">
+                <div class="row" id="rowPesquisa">
+                    <div class="col-xs-12">
+                        <div id="content-header" class="clearfix">
+                            <div class="pull-left">
+                                <ol class="breadcrumb">
+                                    <li><a href="#"><span id="breadcumb1">{{ ctrlHome.translations.Geral_Breadcumb1.texto }}</span></a></li>
+                                    <li class="active"><span id="breadcumb2">{{ ctrlHome.translations.Noticias.texto }}</span></li>
+                                </ol>
+                                <h1 id="titulo">{{ ctrlHome.translations.Noticias.texto }}</h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--#endregion-->
+
+        <div class="col-xs-12" data-ng-repeat="noticia in ctrlHome.model.Noticias | orderBy : '-Date'">
+            <div class="main-box">
+                <div class="main-box-body clearfix" style="padding-bottom:0px">
+                    <div class="row">
+                        <article>
+                            <div class="table table-responsive">
+                                <div class="form-group">
+                                    <header style="padding-top:5px">
+                                        <div class="form-inline">
+                                            <h2 ng-bind-html="noticia.Titulo" class="col-md-10"></h2>
+                                            <div style="float:right; padding:5px;" class="text-info">
+                                                <small>
+                                                    <i class="fa fa-calendar" aria-hidden="true"></i>
+                                                    {{ noticia.Data | date : format : mediumDate }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </header>
+                                </div>
+                                <br />
+                                <div class="form-inline" data-ng-show="noticia.NoticiaIdSiteIntertox > 0">
+                                    <div style="display: inline" ng-bind-html="noticia.Resumo"></div>
+                                    <span><a style="border-bottom:solid; border-width:1px;" href="{{ noticia.Link }}" target="_blank"><span>{{ ctrlHome.translations.Noticias_LeiaMais.texto }}</span></a></span>
+                                </div>
+                                <div class="form-inline" data-ng-show="!noticia.NoticiaIdSiteIntertox || noticia.NoticiaIdSiteIntertox == 0">
+                                    <div style="display: inline" ng-bind-html="noticia.Resumo"></div>
+                                    <span><a style="border-bottom:solid; border-width:1px;" data-ng-click="ctrlHome.AbrirModalNoticia(noticia)"><span>{{ ctrlHome.translations.Noticias_LeiaMais.texto }}</span></a></span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-lg-12" data-ng-if="!ctrlHome.model.Noticias.length > 0 || ctrlHome.model.Noticias == null">
+            <div class="alert alert-warning fade in text-center">
+                <i class="fa fa-warning fa-fw fa-lg"></i>
+                <span>{{ ctrlHome.translations.Noticias_NaoDisponivel.texto }}</span>
+            </div>
+        </div>
+
+
+        <div id="pagination" data-ng-show="ctrlHome.model.Noticias.length > 0"></div>
+        <div id="lblTotalNoticias" data-ng-show="ctrlHome.model.Noticias.length > 0"> {{ ctrlHome.translations.Geral_TotalReg.texto + ': ' + ctrlHome.DadosPesquisa.Paginacao.totalRegistros }}</div>
+        <input id="pathNavegador" type="hidden" value="/NewSafetyChem/Home/SetSessionNavegador" />
+
+    </div>
+</div>
+
+
+
+
+                    <div class="modal scale" style="z-index: 10000000" id="pleaseWaitDialogRotinasGerais" data-backdrop="static" data-keyboard="false">
+                        <div class="modal-dialog transparent" style="height: 100%; width: 100%; margin: 0px ! important;">
+                            <div class="modal-content" style="height: 100%; width: 100%;">
+                                <div class="centered">
+                                    <div style="float: left; clear: left">
+                                        <img style="width: 20%; height: 10%" src="/img/logo.png" />
+                                    </div>
+                                    <div style="float: left; clear: left; margin: 9px 0 0 0">
+                                        <img src="/img/142.GIF" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <footer id="footer-bar" class="row">
+                        <p id="footer-copyright" class="col-xs-12">
+                            Copyright © 2011 - 2022 Intertox - SafetyChem.
+                        </p>
+                    </footer>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="myAvisoPesquisa" tabindex="-1" role="dialog" aria-labelledby="myAvisoPesquisa" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="left: 5%; top: 10%">
+                <header class="modal-header">
+                    <h4 class="modal-title"><span id="spTituloModalAvisoPesquisa">Atenção!</span></h4>
+                </header>
+                <div class="modal-body">
+                    <div class="alert alert-block alert alert-info fade in">
+                        <h4>
+                            <strong>
+                                <span id="spConteudoModalAvisoPesquisa">Você não informou nenhuma condição de filtro, e por isso a pesquisa pode demorar um pouco. Deseja continuar?</span>
+                                <strong>
+                                </strong>
+                            </strong>
+                        </h4>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <p>
+                        <a id="btnSimAvisoPesquisa" class="btn btn-primary" href="#" title="Sim"><span id="lblSimAvisoPesquisa">Sim</span></a>
+                        <a id="btnNaoAvisoPesquisa" class="btn btn-default" href="#" title="Não"><span id="lblNaoAvisoPesquisa">Não</span></a>
+                        <input type="hidden" id="hfRespostaAvisoPesquisa">
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myCallBackSuccess" tabindex="-1" role="dialog" aria-labelledby="myCallBackErro" aria-hidden="true">
+        <div class="modal-dialog" style="left: 0%">
+            <div class="modal-content" style="width: auto;">
+
+                <div class="col-lg-12">
+                    <div class="main-box clearfix">
+                        <div class="alert alert-success fade in text-center">
+                            <i class="fa fa-times-circle fa-fw fa-lg"></i>
+                            <span id="msgCallbackSuccess"></span>
+                            <br />
+                            <a id="btnCallbackSuccessSair" class="btn btn-primary" href="#">Ok</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="myCallBackErro" tabindex="-1" role="dialog" aria-labelledby="myCallBackErro" aria-hidden="true">
+        <div class="modal-dialog" style="left: 0%">
+            <div class="modal-content" style="width: auto;">
+
+                <div class="col-lg-12">
+                    <div class="main-box clearfix">
+                        <div class="alert alert-danger fade in text-center">
+                            <i class="fa fa-times-circle fa-fw fa-lg"></i>
+                            <span id="msgCallbackErro"></span>
+                            <br />
+                            <a id="btnCallbackErroSair" class="btn btn-primary" href="#">Ok</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="myExcluir" tabindex="-1" role="dialog" aria-labelledby="myExcluir" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="left: 5%; top: 10%">
+                <div class="row col-lg-12">
+                    <div class="col-lg-10">
+                        <div class="main-box clearfix">
+                            <header class="main-box-header clearfix">
+                                <h2><span id="spTituloModalAvisoExcluir"></span></h2>
+                            </header>
+                            <div class="main-box-body clearfix">
+                                <div class="alert alert-block alert  alert-danger fade in">
+                                    <h4><b><span id="spSubtituloModalAvisoExcluir"></span></b></h4>
+                                    <p>
+                                        <span id="spConteudoModalAvisoExcluir"></span>
+                                    </p>
+                                    <p>
+                                        <a id="btnSimAvisoExcluir" class="btn btn-success" href="#"><span id="lblSimAvisoExcluir">Sim</span></a>
+                                        <a id="btnNaoAvisoExcluir" class="btn btn-default" href="#"><span id="lblNaoAvisoExcluir">Não</span></a>
+                                        <input type="hidden" id="hfRespostaAvisoExcluir" />
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myItxSelecionaReg" tabindex="-1" role="dialog" aria-labelledby="myItxSelecionaReg" aria-hidden="true">
+        <div class="modal-dialog" style="left: 0%; top: -22px;">
+            <div class="modal-content" style="width: auto; height: 600px;">
+                <div class="modal-header">
+                    <h4 id="tituloHeaderItxSelecionaReg" class="modal-title">Ativar / Desativar Cadastros para Esta Empresa</h4>
+                </div>
+                <div class="main-box-body clearfix">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="main-box">
+                                <div class="main-box-body clearfix">
+                                    <header class="main-box-header clearfix">
+                                        <h2><span id="spTituloItxSelecionaReg">Orgão</span></h2>
+                                    </header>
+                                    <div class="main-box-body clearfix">
+
+
+                                        <div class="form-inline col-lg-12">
+                                            <div class="row">
+                                                <div class="form-group  col-md-12">
+                                                    <label class="sr-only"><span>Orgão</span></label>
+
+                                                    <input id="txtSearchItx" class="form-control" type="text" />
+                                                    <a id="btnSearchItxSelecionaReg" class="btn btn-primary pull-center" href="#">
+                                                        <i class="fa fa-search fa-lg"></i>
+                                                    </a>
+                                                    <div class="form-group">
+                                                        <div class="btn-group">
+                                                            <button type="button" id="acoes1" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                                                <i class="fa fa-check fa-lg"></i><span id="lblBtnAcoes1">Ativar</span><span class="caret"></span>
+                                                            </button>
+                                                            <ul class="dropdown-menu" style="height: 65px;" role="menu">
+                                                                <li><a id="acAtivaTodosIxtReg" href="#"><i class="fa fa-check-square"></i><span id="lblAtivaTodosIxtReg">Todos</span></a></li>
+                                                                <li><a id="acAtivaTodosPagIxtReg" href="#"><i class="fa fa-check-square-o"></i><span id="lblAtivaTodosPagIxtReg">Todos desta página</span></a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="btn-group">
+                                                            <button type="button" id="acoes2" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                                                <i class="fa fa-times fa-lg"></i><span id="lblBtnAcoes2">Desativar</span><span class="caret"></span>
+                                                            </button>
+                                                            <ul class="dropdown-menu" style="height: 65px;" role="menu">
+                                                                <li><a id="acDesativaTodosIxtReg" href="#"><i class="fa fa-times-circle"></i><span id="lblDesativaTodosIxtReg">Todos</span></a></li>
+                                                                <li><a id="acDesativaTodosPagIxtReg" href="#"><i class="fa fa-times-circle-o"></i><span id="lblDesativaTodosPagIxtReg">Todos desta página</span></a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <input id="hfHabilitaDesabilitaTodos" type="hidden" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-inline">
+                                            <div class="form-group col-lg-12" style="overflow-x: hidden; overflow-y: scroll; height: 300px; margin: 20px 0 0 0">
+                                                <div class="table-responsive">
+                                                    <table id="tbItxSelecionaReg" class="table table-bordered table-hover">
+                                                        <thead>
+                                                            <tr class="active">
+                                                                <th class="active text-center"><span id="lblItxSelecionaRegDescr">Descrição</span></th>
+                                                                <th class="active text-center"><span id="lblItxSelecionaRegAtivo">Ativo?</span></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody></tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-inline col-lg-12" style="margin: 0px 0px 0px 0px;">
+                                            <div class="form-group">
+                                                <input type="hidden" id="hfTotalRecordsItxSelecionaReg" />
+                                                <div id="paginationItxSelecionaReg"></div>
+                                                <span id="spTotalResultadosItxReg"></span>
+                                                <input type="hidden" id="hfTotalResultadosItxReg" />
+                                            </div>
+                                        </div>
+                                        <div class="form-inline">
+                                            <div class="form-group pull-right">
+                                                <button id="btnSalvarItxSelecionaReg" class="btn btn-primary" type="button"><span id="lblSalvarItxSelecionaReg">Salvar</span></button>
+                                                <button id="btnCancelarItxSelecionaReg" class="btn btn-danger" type="button">Cancelar</button>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="myAvisoAcaoGenerico" tabindex="-1" role="dialog" aria-labelledby="myAvisoAcaoGenerico" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" id="modalType">
+                <header class="modal-header">
+                    <h4 class="modal-title" id="spTituloModalAcaoGenerico"></h4>
+                </header>
+                <div class="modal-body"> 
+                    <div class="alert alert-block alert-info fade in">
+                        <i class="fa fa-info-circle fa-fw fa-lg"></i>
+                        <strong id="spConteudoModalAcaoGenerico"></strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="row" style="display: flex; justify-content: end;">
+                        <div class="input-group">
+                            <a id="btnOkAvisoAcaoGenerico" class="btn btn-primary" href="#"><span id="lblSimAvisoAcaoGenerico">Ok</span></a>
+                            <a id="btnSimAvisoAcaoGenerico" class="btn btn-success" href="#"><span id="lblSimAvisoAcaoGenerico">Sim</span></a>
+                            <a id="btnNaoAvisoAcaoGenerico" class="btn btn-default" href="#"><span id="lblNaoAvisoAcaoGenerico">Não</span></a>
+                            <input type="hidden" id="hfRespostaAvisoAcaoGenerico" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="Logout" tabindex="-1" role="dialog" aria-labelledby="Logout" aria-hidden="true">
+        <div class="modal-dialog" style="left: 0%">
+            <div class="modal-content" style="width: auto;">
+
+                <div class="col-lg-12">
+                    <div class="main-box clearfix">
+                        <div class="alert alert-danger fade in text-center">
+                            <i class="fa fa-times-circle fa-fw fa-lg"></i>
+                            <span style="display:none" id="msgLogoutTelaPrincipal">O tempo limite de inatividade atingido. O acesso foi encerrado. Por favor, entre na tela principal e realize o login novamente</span>
+                            <span style="display:none" id="msgLogout">O tempo limite de inatividade atingido. O acesso foi encerrado. Por favor, realize o login novamente</span>
+                            <span style="display:none" id="msgLogoutOutroAcesso">Outro acesso foi realizado com este usu&#xE1;rio. Voc&#xEA; ser&#xE1; desconectado.</span>
+                            <br />
+                            <a id="btnLogout" class="btn btn-primary" href="#">Ok</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="hfIdioma" />
+    <input type="hidden" id="hfSistema" />
+    <input type="hidden" id="hfGrupoPermissao" />
+    <input type="hidden" id="hfFuncionalidade" />
+
+    <input type="hidden" id="hfUsaCultura" value="true" />
+
+    <input type="hidden" id="hfMensagemOperacaoConcluidaSucesso" />
+    <input type="hidden" id="hfMensagemOperacaoConcluidaFalha" />
+
+
+    <input type="hidden" id="hfMensagemRegistroSucesso" />
+    <input type="hidden" id="hfMensagemRegistroFalha" />
+    <input type="hidden" id="hfLabelTotalReg" />
+
+    <input type="hidden" id="hfSwitchSim" />
+    <input type="hidden" id="hfSwitchNao" />
+
+    <input type="hidden" id="hfLabelBotaoSalvar" />
+    <input type="hidden" id="hfLabelBotaoExcluir" />
+    <input type="hidden" id="hfLabelBotaoSalvarComo" />
+
+    <input type="hidden" id="hfMsgSelecioneIdioma" value="Selecione um idioma" />
+    <input type="hidden" id="hfMsgExisteTraducaoRegistro" value="Já existe uma tradução para esse registro nesse idioma." />
+    <input type="hidden" id="hfMsgSelecioneRegGrid" value="Selecione um registro do grid." />
+    <input type="hidden" id="hfMsgAtencao" value="Atenção" />
+    <input type="hidden" id="hfMsgExcluir" value="Excluir" />
+    <input type="hidden" id="hfMsgContentExcluir" value="Deseja excluir esse registro ? Não será possivel recuperá-lo" />
+    <input type="hidden" id="hfMsgDesejaExcluirRegistro" value="Deseja excluir esse registro ? Não será possivel recuperá-lo" />
+    <input type="hidden" id="hfMsgRegistroCopiado" value="Selecione um registro da empresa Intertox para ser copiado." />
+    <input type="hidden" id="hfMsgTraducaoExistente" value="A tradução para este idioma já está informada nos campos de cadastro." />
+
+    <input type="hidden" id="hfMsgItxRegsSalvos" />
+    <input type="hidden" id="hfMsgRegInserir" />
+    <input type="hidden" id="hfMsgRegEditar" />
+    <input type="hidden" id="hfMsgRegFalha" />
+    <input type="hidden" id="hfRegNaoPermitidoItxReg" />
+    <input type="hidden" id="hfRegExcluir" />
+
+    <input type="hidden" id="hfMsgSubTituloItxReg" />
+    <input type="hidden" id="hfMsgConteudoAtivarItxReg" />
+    <input type="hidden" id="hfMsgConteudoDesativarItxReg" />
+
+
+    <input type="hidden" id="pathHabilitaDesabilitaTodosItx" value="/Plataforma/HabilitaDesabilitaTodosRegistrosItxByFuncionalidade" />
+    <input type="hidden" id="pathLogOut" value="/Login/LogOut" />
+    <input type="hidden" id="pathComboCulture" name="pathTranslate" value="/Plataforma/GetAllIdiomasAtivos" />
+    <input type="hidden" id="pathCulture" name="pathCulture" value="/Plataforma/TraducaoCampos" />
+    <input type="hidden" id="pathUserCulture" name="pathUserCulture" value="/Plataforma/GetUsuariosIdiomaDados" />
+    <input type="hidden" id="pathTranslate" name="pathTranslate" value="/Plataforma/TraducaoTextos" />
+    <input type="hidden" id="pathTraduzirEmVariosTextos" name="pathTraduzirEmVariosTextos" value="/Plataforma/TraduzirEmVariosTextos" />
+    <input type="hidden" id="pathControleSessao" value="/Plataforma/VerificarSessao" />
+</body>
+
+</html>

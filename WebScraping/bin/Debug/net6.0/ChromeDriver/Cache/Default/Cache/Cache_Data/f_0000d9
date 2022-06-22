@@ -1,0 +1,532 @@
+﻿var matched, browser;
+
+jQuery.uaMatch = function (ua) {
+    ua = ua.toLowerCase();
+
+    var match = /(chrome)[ \/]([\w.]+)/.exec(ua) ||
+        /(webkit)[ \/]([\w.]+)/.exec(ua) ||
+        /(opera)(?:.*version|)[ \/]([\w.]+)/.exec(ua) ||
+        /(msie) ([\w.]+)/.exec(ua) ||
+        ua.indexOf("compatible") < 0 && /(mozilla)(?:.*? rv:([\w.]+)|)/.exec(ua) ||
+        [];
+
+    return {
+        browser: match[1] || "",
+        version: match[2] || "0"
+    };
+};
+
+matched = jQuery.uaMatch(navigator.userAgent);
+browser = {};
+
+if (matched.browser) {
+    browser[matched.browser] = true;
+    browser.version = matched.version;
+}
+
+// Chrome is Webkit, but Webkit is also Safari.
+if (browser.chrome) {
+    browser.webkit = true;
+} else if (browser.webkit) {
+    browser.safari = true;
+}
+
+jQuery.browser = browser;
+
+
+(function ($) {
+    var methods = {
+        init: function (options) {
+            return this.each(function () {
+                if ($(this).data('SA'))
+                    return resetData();
+
+                var parent = $(this);
+                var autocomplete = null;
+                var menu = null;
+                var focusedItem = null;
+                var lastFocusedItem = null;
+                var pageIndex = 0;//-1;
+                var lastScrollTop = 0;
+                var selectedIndex = 0;
+                var lastSelectedIndex = -1;
+                var data = new Array();
+                var ignoreFocus = false;
+                var loading = false;
+                var startedLoadingFromScroll = false;
+
+                // jpm 
+                var cleaningFunction = function () {
+                    //options.hiddenFieldSelectedValue.val('');
+
+                    options.idValueFunction('', options.parametroOpcional);
+
+                    //$(this).callbackFunctionForFieldClearance()
+                    if (typeof options.callbackFunctionForFieldClearance == 'function') {
+                        options.callbackFunctionForFieldClearance();
+                    }
+                }
+
+                parent.keydown(function (e) {
+                    if (e.keyCode == 46 || e.keyCode == 8) {
+                        cleaningFunction();
+                    }
+                })
+
+                var startSearching = function (si) {
+                    // jpm - clean the hidden field content
+                    //options.hiddenFieldSelectedValue.val('');
+                    // jpm - aqui não é necessário, apenas antes de chamar o getDataFunc
+                    //cleaningFunction()
+
+                    lastScrollTop = autocomplete.scrollTop();
+                    if (!si) {
+                        var activeElement = autocomplete.find(".ui-state-hover");
+                        if (activeElement.length) {
+                            activeElement = activeElement.parent();
+                            selectedIndex = data.length ? activeElement.parent().children().index(activeElement) : 0;
+                        }
+                    }
+                    else {
+                        selectedIndex = si;
+                        parent.autocomplete('search');
+                    }
+                    if (!selectedIndex)
+                        lastScrollTop = 0;
+                    //parent.autocomplete('search');
+                };
+
+                //Resets the current search
+                var resetData = function () {
+                    //cleaningFunction()
+                    data = new Array();
+                    pageIndex = 0;//-1;
+                    selectedIndex = 0;
+                    lastSelectedIndex = -1;
+                    focusedItem = null;
+                    loading = false;
+                    startedLoadingFromScroll = false;
+                    lastScrollTop = 0;
+                    autocomplete.scrollTop(0);
+                    parent.removeAttr('sa-value').autocomplete('option', 'disabled', false);
+                    parent.data().autocomplete.term = null;
+                };
+
+                //JS event cancelling logic
+                var stopEvent = function (e) {
+                    if (e.stopPropagation)
+                        e.stopPropagation();
+                    else e.cancelBubble = true;
+                    if (e.preventDefault)
+                        e.preventDefault();
+                    else e.returnValue = false;
+                    return false;
+                };
+
+                //We overwrite the source logic to call our getDataFunc function
+                options.source = function (request, response) {
+                    //We won't start another search while a search is still in progress
+                    if (loading)
+                        return;
+
+                    // jpm - clean the hidden field content
+                    //options.hiddenFieldSelectedValue.val('');
+                    cleaningFunction()
+
+                    //We verify that options.getDataFunc exists and it is a function
+                    if (options.getDataFunc && typeof (options.getDataFunc) === "function") {
+                        //If the selected item has not changed, we return
+                        if (lastSelectedIndex == selectedIndex)
+                            return;
+
+                        lastSelectedIndex = selectedIndex;
+
+                        //We get the term we are searching for
+                        var term = parent.attr('sa-value');
+                        if (term) {
+                            loading = true;
+
+                            //We call the function to get the data
+                            options.getDataFunc(term, pageIndex + 1, options.pageSize, function (r) {
+                                loading = false;
+                                if (r) {
+                                    //We allow scrolling
+                                    if (!r.length)
+                                        startedLoadingFromScroll = false;
+
+                                    //If data already exists, we add our new data to the existing data
+                                    if (data.length)
+                                        for (var i = 0; i < r.length; i++)
+                                            data.push(r[i]);
+                                    else data = r;
+                                    response(data);
+
+                                    //We scroll to the last position
+                                    autocomplete.scrollTop(lastScrollTop);
+
+                                    //We increment the current page index
+                                    pageIndex++;
+                                }
+                            }, options.parametroOpcional);
+
+                            $(".ui-autocomplete").undelegate('li a', 'click');
+                            $(".ui-autocomplete").delegate('li a', 'click', function (e) {
+                                //options.hiddenFieldSelectedValue.val($(this).parents('li').find('#hfAutoCompleteValue').val());
+                                options.idValueFunction($(this).parents('li').find('#hfAutoCompleteValue').val(), options.parametroOpcional);
+                                if (options.change != null) {
+                                    options.change();
+                                }
+                            });
+                        }
+                    }
+                };
+
+                $(this).bind('autocompletecreate', function () {
+                    //We get the elements created by JqueryUI Autocomplete
+                    autocomplete = $(this).autocomplete('widget');
+                    menu = parent.data().autocomplete.menu.element;
+
+                    if (autocomplete.attr('sa-scroll') != 'on') {
+                        //We create the scrolling functionality to request new data when we arrived at the end of list
+                        autocomplete.scroll(function (e) {
+                            if (loading)
+                                return stopEvent(e);
+                            if (startedLoadingFromScroll) {
+                                if ($.browser.msie || $.browser.mozilla)
+                                    autocomplete.scrollTop(lastScrollTop);
+                                return stopEvent(e);
+                            }
+                            if (autocomplete[0].scrollHeight - autocomplete.scrollTop() <= autocomplete.outerHeight()) {
+                                startedLoadingFromScroll = true;
+                                startSearching(Math.max(autocomplete.find(".ui-menu-item").length - 1, 0));
+                            }
+                        }).attr('sa-scroll', 'on');
+
+                        //After releasing the mouse just after getting new data, we release the scrolling functionality
+                        $(document).mousemove(function (e) {
+                            if (!e.buttons)
+                                startedLoadingFromScroll = false;
+                        });
+                    }
+                    startSearching();
+                })
+                        .autocomplete(options)
+                        .bind('autocompletefocus', function (event, ui) {
+                            focusedItem = ui.item;
+                            lastFocusedItem = ui.item;
+                            if (ignoreFocus) {
+                                ignoreFocus = false;
+                                return;
+                            }
+                            //If we reached the last element in the list, we get new data
+                            if (autocomplete.find(".ui-menu-item:last .ui-state-hover").length)
+                                startSearching();
+                        })
+                        .keyup(function (e) {
+                            if (e.keyCode == 27)
+                                return resetData();
+                            if (e.keyCode == 38 || e.keyCode == 40 || focusedItem && focusedItem.label == parent.val())
+                                return;
+                            if (parent.attr('sa-value') != parent.val())
+                                resetData();
+                            parent.attr('sa-value', parent.val());
+                        })
+                        .keydown(function (e) {
+
+                            // TAB ou ENTER
+                            if ((e.keyCode == 9 || e.keyCode == 13) && lastFocusedItem) {
+                                if (lastFocusedItem.id.length != 0 && parent.val().trim().length > 0) {
+                                    //options.hiddenFieldSelectedValue.val(lastFocusedItem.id);
+                                    options.idValueFunction(lastFocusedItem.id, options.parametroOpcional);
+                                    if (options.select != null) {
+                                        options.select();
+                                    }
+                                }
+                            }
+                        })
+                        .bind('autocompleteopen', function (event, ui) {
+                            if (!selectedIndex) {
+                                if (options.autoFocus) {
+                                    ignoreFocus = true;
+                                    menu.menu('activate', event, autocomplete.find(".ui-menu-item:first"));
+                                }
+                            }
+                            else {
+                                ignoreFocus = true;
+                                menu.menu('activate', event, autocomplete.find(".ui-menu-item:eq(" + selectedIndex + ")"));
+                            }
+                        })
+                        .bind('autocompleteclose', function (event, ui) {
+                            //When the dropdown closes, we reset the current search
+                            resetData();
+                        }).data('autocomplete')._renderItem = function (ul, item) {
+
+                            //var color = (item.color != null && item.color.length > 0) ? 'color: ' + item.color + ';' : '';
+                            //LARGURA ANTIGA
+                            //$("<li style='width:280px !important'></li>")
+                            
+                            var color = 'color: black';
+
+                            $("<li style='width:400px !important'></li>")
+                            .data("item.autocomplete", item)
+                            .append("<a style='width:100%;float:left; " + color + " !important'>" + item.label + "</a><input type='hidden' id='hfAutoCompleteValue'  value='" + item.id + "' />")
+                                .appendTo(ul)
+                        };
+            });
+        },
+        destroy: function () {
+            $(this).removeData('SA').autocomplete('destroy');
+        },
+    };
+
+    //We name our plugin smartautocompleteangular
+    $.fn.smartautocompleteangular = function (method) {
+        //Method calling logic as described in jQuery Plugin Authoring documentation: http://docs.jquery.com/Plugins/Authoring
+        if (methods[method])
+            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        else if (typeof method === 'object' || !method)
+            return methods.init.apply(this, arguments);
+        else $.error('Method ' + method + ' does not exist on jQuery.smartautocompleteangular');
+    };
+
+})(jQuery);
+
+////OLD
+
+//(function ($) {
+
+//    var methods = {
+
+//        init: function (options) {
+//            return this.each(function () {
+//                if ($(this).data('SA'))
+//                    return resetData();
+
+//                var parent = $(this);
+//                var autocomplete = null;
+//                var menu = null;
+//                var focusedItem = null;
+//                var pageIndex = -1;
+//                var lastScrollTop = 0;
+//                var selectedIndex = 0;
+//                var lastSelectedIndex = -1;
+//                var data = new Array();
+//                var ignoreFocus = false;
+//                var loading = false;
+//                var startedLoadingFromScroll = false;
+
+//                var startSearching = function (si) {
+//                    lastScrollTop = autocomplete.scrollTop();
+//                    if (!si) {
+//                        var activeElement = autocomplete.find(".ui-state-hover");
+//                        if (activeElement.length) {
+//                            activeElement = activeElement.parent();
+//                            selectedIndex = data.length ? activeElement.parent().children().index(activeElement) : 0;
+//                        }
+//                    }
+//                    else selectedIndex = si;
+//                    if (!selectedIndex)
+//                        lastScrollTop = 0;
+
+//                    parent.autocomplete('search');
+//                };
+
+
+//                //Resets the current search
+//                var resetData = function () {
+//                    data = new Array();
+//                    pageIndex = -1;
+//                    selectedIndex = 0;
+//                    lastSelectedIndex = -1;
+//                    focusedItem = null;
+//                    loading = false;
+//                    startedLoadingFromScroll = false;
+//                    lastScrollTop = 0;
+//                    autocomplete.scrollTop(0);
+//                    parent.removeAttr('sa-value').autocomplete('option', 'disabled', false);
+//                    parent.data().autocomplete.term = null;
+//                };
+
+//                //JS event cancelling logic
+//                var stopEvent = function (e) {
+//                    if (e.stopPropagation)
+//                        e.stopPropagation();
+//                    else e.cancelBubble = true;
+//                    if (e.preventDefault)
+//                        e.preventDefault();
+//                    else e.returnValue = false;
+//                    return false;
+//                };
+
+//                //We overwrite the source logic to call our getDataFunc function
+//                options.source = function (request, response) {
+//                    //We won't start another search while a search is still in progress
+//                    if (loading)
+//                        return;
+
+//                    //We verify that options.getDataFunc exists and it is a function
+//                    if (options.getDataFunc && typeof (options.getDataFunc) === "function") {
+//                        //If the selected item has not changed, we return
+//                        if (lastSelectedIndex == selectedIndex)
+//                            return;
+
+//                        lastSelectedIndex = selectedIndex;
+
+//                        //We get the term we are searching for
+//                        var term = parent.attr('sa-value');
+//                        if (term) {
+//                            loading = true;
+
+//                            //We call the function to get the data
+//                            options.getDataFunc(term, pageIndex + 1, options.pageSize, function (r) {
+//                                loading = false;
+//                                if (r) {
+//                                    //We allow scrolling
+//                                    if (!r.length)
+//                                        startedLoadingFromScroll = false;
+
+//                                    //If data already exists, we add our new data to the existing data
+//                                    if (data.length)
+//                                        for (var i = 0; i < r.length; i++)
+//                                            data.push(r[i]);
+//                                    else data = r;
+//                                    response(data);
+
+//                                    //We scroll to the last position
+//                                    autocomplete.scrollTop(lastScrollTop);
+
+//                                    //We increment the current page index
+//                                    pageIndex++;
+//                                }
+//                            });
+
+//                            //$(".ui-autocomplete").undelegate('li', 'mouseover');
+//                            //$(".ui-autocomplete").delegate('li', 'mouseover', function (e) {
+//                            //    $(this).find('#spAdd').css('display', '');
+//                            //});
+
+//                            //$(".ui-autocomplete").undelegate('li', 'mouseout');
+//                            //$(".ui-autocomplete").delegate('li', 'mouseout', function (e) {
+//                            //    $(this).find('#spAdd').css('display', 'none');
+//                            //});
+
+//                            //$(".ui-autocomplete").undelegate('li #spAdd', 'click');
+//                            //$(".ui-autocomplete").delegate('li #spAdd', 'click', function (e) {
+//                            //    options.callbackSelectItem(e
+//                            //        , $(this).parent().find('#hfAutoCompleteElementId').val()
+//                            //        , $(this).parent().find('a').text());
+//                            //});
+
+//                            // if (options.multi) {
+//                            //     $(".ui-autocomplete").undelegate('li a', 'select');
+//                            //     $(".ui-autocomplete").delegate('li a', 'select', function (e) {
+//                            //         alert('aaaa');
+//                            //       //  $(this).find('#spAdd').css('display', 'none');
+//                            //     });
+//                            // }
+//                        }
+//                    }
+//                };
+
+//                $(this).bind('autocompletecreate', function () {
+//                    //We get the elements created by JqueryUI Autocomplete
+//                    autocomplete = $(this).autocomplete('widget');
+//                    menu = parent.data().autocomplete.menu.element;
+
+//                    if (autocomplete.attr('sa-scroll') != 'on') {
+//                        //We create the scrolling functionality to request new data when we arrived at the end of list
+//                        autocomplete.scroll(function (e) {
+//                            if (loading)
+//                                return stopEvent(e);
+//                            if (startedLoadingFromScroll) {
+//                                if ($.browser.msie || $.browser.mozilla)
+//                                    autocomplete.scrollTop(lastScrollTop);
+//                                return stopEvent(e);
+//                            }
+//                            if (autocomplete[0].scrollHeight - autocomplete.scrollTop() <= autocomplete.outerHeight()) {
+//                                startedLoadingFromScroll = true;
+//                                startSearching(Math.max(autocomplete.find(".ui-menu-item").length - 1, 0));
+//                            }
+//                        }).attr('sa-scroll', 'on');
+
+//                        //After releasing the mouse just after getting new data, we release the scrolling functionality
+//                        $(document).mousemove(function (e) {
+//                            if (!e.buttons)
+//                                startedLoadingFromScroll = false;
+//                        });
+//                    }
+
+//                    startSearching();
+//                }).autocomplete(options)
+//                        .bind('autocompletefocus', function (event, ui) {
+
+//                            focusedItem = ui.item;
+//                            if (ignoreFocus) {
+//                                ignoreFocus = false;
+//                                return;
+//                            }
+
+//                            //If we reached the last element in the list, we get new data
+//                            if (autocomplete.find(".ui-menu-item:last .ui-state-hover").length) {
+//                                startSearching();
+//                            }
+//                        })
+//                        .keyup(function (e) {
+//                            if (e.keyCode == 27)
+//                                return resetData();
+//                            if (e.keyCode == 38 || e.keyCode == 40 || focusedItem && focusedItem.label == parent.val())
+//                                return;
+//                            if (parent.attr('sa-value') != parent.val())
+//                                resetData();
+//                            parent.attr('sa-value', parent.val());
+//                        })
+//                        .bind('autocompleteopen', function (event, ui) {
+//                            if (!selectedIndex) {
+//                                if (options.autoFocus) {
+//                                    ignoreFocus = true;
+//                                    menu.menu('activate', event, autocomplete.find(".ui-menu-item:first"));
+//                                }
+//                            }
+//                            else {
+//                                ignoreFocus = true;
+//                                menu.menu('activate', event, autocomplete.find(".ui-menu-item:eq(" + selectedIndex + ")"));
+//                            }
+//                        })
+//                        .bind('autocompleteclose', function (event, ui) {
+//                            //When the dropdown closes, we reset the current search
+//                            resetData();
+//                        })
+//                    .data('autocomplete')._renderItem = function (ul, item) {
+
+//                        return (options.multi) ?
+//                            $("<li style='width:280px !important'></li>")
+//                            .data("item.autocomplete", (options.multi) ? item.label : item)
+//.append("<a style='width:200px;float:left;'>" + item.label + "</a>"
+//+ "<input type='hidden' id='hfAutoCompleteElementId' value='" + item.value + "' /><button title='selecionar' style='display:none;float:left; margin: -2px 0 0 7px;' id='spAdd' class='btn btn-primary btn-lg' type='button'><span class='fa fa-plus'></span></button>").appendTo(ul)
+//                            :
+
+//                             $("<li style='width:280px !important'></li>")
+//                            .data("item.autocomplete", item)
+//.append("<a style='width:200px;float:left;'>" + item.label + "</a>").appendTo(ul)
+
+
+//                    };
+//            });
+//        },
+//        destroy: function () {
+//            $(this).removeData('SA').autocomplete('destroy');
+//        }
+//    };
+
+
+
+//    //We name our plugin smartautocompleteangular
+//    $.fn.smartautocompleteangular = function (method) {
+//        //Method calling logic as described in jQuery Plugin Authoring documentation: http://docs.jquery.com/Plugins/Authoring
+//        if (methods[method])
+//            return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+//        else if (typeof method === 'object' || !method)
+//            return methods.init.apply(this, arguments);
+//        else $.error('Method ' + method + ' does not exist on jQuery.smartautocompleteangular');
+//    };
+//})(jQuery);

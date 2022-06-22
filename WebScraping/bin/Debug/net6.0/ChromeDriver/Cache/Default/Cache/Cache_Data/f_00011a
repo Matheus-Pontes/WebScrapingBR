@@ -1,0 +1,1843 @@
+﻿
+var selectedCulture = 0;
+var funcionalidadeId = 0;
+var callbackCultureFunction = null;
+var callbackDropdownFunction = null
+var nivel = 1;
+var callBackRedirectItxModal = null;
+var windows = [];
+var idiomaIdSistemaUser = 1;
+var traducoesIdiomas;
+var todasAsTraducoes;
+var traducoesIdiomasCulturas;
+
+if (!Array.prototype.find) {
+    Object.defineProperty(Array.prototype, 'find', {
+        value: function (predicate) {
+            // 1. Let O be ? ToObject(this value).
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+
+            var o = Object(this);
+
+            // 2. Let len be ? ToLength(? Get(O, "length")).
+            var len = o.length >>> 0;
+
+            // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+            if (typeof predicate !== 'function') {
+                throw new TypeError('predicate must be a function');
+            }
+
+            // 4. If thisArg was supplied, let T be thisArg; else let T be undefined.
+            var thisArg = arguments[1];
+
+            // 5. Let k be 0.
+            var k = 0;
+
+            // 6. Repeat, while k < len
+            while (k < len) {
+                // a. Let Pk be ! ToString(k).
+                // b. Let kValue be ? Get(O, Pk).
+                // c. Let testResult be ToBoolean(? Call(predicate, T, « kValue, k, O »)).
+                // d. If testResult is true, return kValue.
+                var kValue = o[k];
+                if (predicate.call(thisArg, kValue, k, o)) {
+                    return kValue;
+                }
+                // e. Increase k by 1.
+                k++;
+            }
+
+            // 7. Return undefined.
+            return undefined;
+        }
+    });
+}
+// JPM - implements format on javascript
+if (!String.prototype.replaceNumberedFormat) {
+    String.prototype.replaceNumberedFormat = function () {
+        var args = arguments;
+        return this.replace(/{(\d+)}/g, function (match, number) {
+            return typeof args[number] != 'undefined'
+                ? args[number]
+                : match
+                ;
+        });
+    };
+}
+
+//Converts a Date object to its equivalent in UTC time.
+function dateToUTC(date) {
+    //return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
+    if (!(Object.prototype.toString.call(date) === "[object Date]"))
+        return date;
+
+    var newDate = new Date(date.toUTCString());
+    var millis = newDate.getTime() + (newDate.getTimezoneOffset() * 60000) //millis = 1325543400000
+    newDate.setTime(millis)
+
+    return newDate;
+}
+
+if (!String.prototype.dateToString) {
+    String.prototype.dateToString = function () {
+        if (this) {
+            var ret = new Date(this);
+            if (!ret)
+                return "";
+            ret = dateToUTC(ret);
+            if ((Object.prototype.toString.call(ret) === "[object Date]"))
+                return ret.toLocaleDateString();
+            else
+                return "";
+        }
+        else {
+            return ""
+        }
+    };
+}
+if (!Date.prototype.dateToString) {
+    Date.prototype.dateToString = function () {
+        if (this) {
+            return dateToUTC(this).toLocaleDateString();
+        }
+        else
+            return "";
+    };
+}
+
+var itxRegObject = null;
+$.mask.definitions['~'] = '([0-9] )?';
+
+$(document).ready(function (e) {
+
+    if ($("#hfUsaCultura").val() == 'true') {
+        util.Events.GetUserActiveCulture(e);
+
+        $("#dropdownCulture #dropdownCultureLabel").html(util.Flags.SetFirstFlag(e));
+
+        $('#ddlCulture li a').on("click", function (e) {
+
+            cultureId = $(this).parent('li').find("input:hidden");
+            $("#hfIdioma").val(cultureId.val());
+
+            $("#dropdownCulture #dropdownCultureLabel").html(util.Flags.GetFlags(cultureId.val()) + $(this).text()
+                + '  <i class="fa fa-caret-down"></i>');
+
+            util.Events.ChangeCulture(e, true, true, false, true, null);
+        });
+
+        $("#logOut").click(function (e) { util.Events.LogOut(e); });
+
+        $('#cbxEmpresa').change(function () {
+
+            var empresaId = $('#cbxEmpresa').val();
+            util.Events.ChangeEmpresaLogada(e, empresaId);
+        });
+
+        util.Events.FecharBrowser(e);
+    }
+
+    $("#linkDadosUsuarios").click(function () {
+        $("#pleaseWaitDialog").modal('show');
+    });
+
+
+    $("#btnLogout").click(function () {
+        window.close();
+        for (var i = 0; i < windows.length; i++) {
+            if (!windows[i].closed) {
+                windows[i].close();
+            }
+        }
+        window.location = '/login'
+    });
+});
+
+var util = {
+
+    Window: {
+        OpenWindow: function (url, target, params) {
+            var retorno = window.open(url, target, params);
+            windows.push(retorno);
+            return retorno;
+        }
+    },
+    Switch: {
+        Create: function (e, switchSeletor, setLabelOn, setLabelOff, onOff) {
+            switchSeletor.bootstrapSwitch({
+                size: 'small', setSizeClass: 'small', onText: setLabelOn, offText: setLabelOff, state: onOff
+            });
+        },
+        SetValue: function (e, switchSeletor, onOff) {
+            switchSeletor.bootstrapSwitch('state', onOff);
+        },
+        GetValue: function (e, switchSeletor) {
+            return switchSeletor.bootstrapSwitch('state');
+        }
+    },
+
+    Grid: {
+        CarregarPorQuantidade: function (e, comboPaginacaoSelector, paginacao, callback) {
+            var callbackFunction = callback;
+
+            comboPaginacaoSelector.change(function (e) {
+                paginacao.page = 1;
+                paginacao.rowsPerPage = comboPaginacaoSelector.val();
+                callbackFunction(e);
+            });
+        }
+    },
+
+    AutoCompleteCustom: {
+        Create: function (textboxSeletor, pageSize, dataSourceFunction, hiddenFieldSelectedValue, selectFunction, cleaningFunction) {
+            var conteudoAnterior = hiddenFieldSelectedValue.val();
+            textboxSeletor.smartautocomplete({
+                getDataFunc: dataSourceFunction,
+                pageSize: pageSize,
+                autoFocus: true,
+                forceSelect: true,
+                multi: false,
+                hiddenFieldSelectedValue: hiddenFieldSelectedValue,
+                select: selectFunction,
+                callbackFunctionForFieldClearance: cleaningFunction
+            });
+            //textboxSeletor.keydown(function (e) {
+            //    if (e.keyCode == 46 || e.keyCode == 8) {
+            //        textboxSeletor.options.cleaningFunction();
+            //    }
+            //})
+            hiddenFieldSelectedValue.val(conteudoAnterior);
+        },
+        BindAutoCompleteCustomEvents: function (e, btnSeletor, textboxSeletor, hiddenFieldSelectedValue) {
+            btnSeletor.click(function (e) {
+                hiddenFieldSelectedValue.val('');
+                textboxSeletor.val('');
+                textboxSeletor.simulate("key-sequence", { sequence: " " });
+            });
+        },
+        CreateAndConfigure: function (textboxSeletor, pageSize, dataSourceFunction, hiddenFieldSelectedValue, e, btnSeletor, selectFunction, cleaningFunction) {
+            util.AutoCompleteCustom.Create(textboxSeletor, pageSize, dataSourceFunction, hiddenFieldSelectedValue, selectFunction, cleaningFunction);
+            util.AutoCompleteCustom.BindAutoCompleteCustomEvents(e, btnSeletor, textboxSeletor, hiddenFieldSelectedValue);
+        }
+    },
+
+    ItxModal: {
+        Open: function (e, saveUrl) {
+            $("#myItxSelecionaReg").modal({ backdrop: 'static', keyboard: false }, 'show');
+            $("#tbItxSelecionaReg tbody").html('');
+            $("#txtSearchItx").val('');
+            $("#hfHabilitaDesabilitaTodos").val('');
+
+            $("#myItxSelecionaReg").undelegate('#btnSalvarItxSelecionaReg', 'click');
+            $("#myItxSelecionaReg").delegate('#btnSalvarItxSelecionaReg', 'click', function (e) {
+                util.ItxModal.Save(e, saveUrl);
+            });
+
+            $("#myItxSelecionaReg").undelegate('#btnCancelarItxSelecionaReg', 'click');
+            $("#myItxSelecionaReg").delegate('#btnCancelarItxSelecionaReg', 'click', function (e) {
+                $("#myItxSelecionaReg").modal('hide');
+            });
+
+            $("#myItxSelecionaReg").undelegate('#btnSearchItxSelecionaReg', 'click');
+            $("#myItxSelecionaReg").delegate('#btnSearchItxSelecionaReg', 'click', function (e) {
+                util.ItxModal.Search(e);
+            });
+
+            $("#myItxSelecionaReg").undelegate('#acDesativaTodosPagIxtReg', 'click');
+            $("#myItxSelecionaReg").delegate('#acDesativaTodosPagIxtReg', 'click', function (e) {
+                util.ItxModal.DisableAllPage(e);
+            });
+
+            $("#myItxSelecionaReg").undelegate('#acAtivaTodosPagIxtReg', 'click');
+            $("#myItxSelecionaReg").delegate('#acAtivaTodosPagIxtReg', 'click', function (e) {
+                util.ItxModal.EnableAllPage(e);
+            });
+
+            $("#myItxSelecionaReg").undelegate('#acDesativaTodosIxtReg', 'click');
+            $("#myItxSelecionaReg").delegate('#acDesativaTodosIxtReg', 'click', function (e) {
+                $("#hfHabilitaDesabilitaTodos").val(false);
+                util.Modal.OpenAvisoAntesAcaoGenerico(e, 'info', $("#hfMsgAtencao").val(), $('#hfMsgSubTituloItxReg').val(), $('#hfMsgConteudoDesativarItxReg').val(), util.ItxModal.EnableOrDisableAll, false, true, true);
+            });
+
+            $("#myItxSelecionaReg").undelegate('#acAtivaTodosIxtReg', 'click');
+            $("#myItxSelecionaReg").delegate('#acAtivaTodosIxtReg', 'click', function (e) {
+                $("#hfHabilitaDesabilitaTodos").val(true);
+                util.Modal.OpenAvisoAntesAcaoGenerico(e, 'info', $("#hfMsgAtencao").val(), $('#hfMsgSubTituloItxReg').val(), $('#hfMsgConteudoAtivarItxReg').val(), util.ItxModal.EnableOrDisableAll, false, true, true);
+            });
+        },
+        Search: function (e) {
+            util.ItxModal.Create(e, itxRegObject.urlItxReg, false, true, $("#txtSearchItx").val())
+        },
+        Create: function (e, url, paginate, isSearch, searchValue) {
+
+            if (!paginate) {
+                itxRegObject = new ItxRegs(url);
+                itxRegObject.arraySelecionadosItxRegs = [];
+                itxRegObject.selecionadosPaginaAtual = [];
+                itxRegObject.searchTerm = '';
+                itxRegObject.paginacaoItxRegs = new Pagination();
+                itxRegObject.paginacaoItxRegs.page = 1;
+                itxRegObject.paginacaoItxRegs.rowsPerPage = 10;
+                itxRegObject.paginacaoItxRegs.sortField = '';
+                itxRegObject.paginacaoItxRegs.asc = true;
+            }
+            else {
+                itxRegObject.selecionadosPaginaAtual = [];
+
+                $("#tbItxSelecionaReg tbody tr").each(function (e) {
+                    var id = $(this).find("#hfItxRegId").val();
+                    var control = $(this).find("#chkAtivadoDesativado");
+                    var isAlterado = $(this).find("#hfItxAlterado").val();
+                    itxRegObject.selecionadosPaginaAtual.push({ Id: id, IsAlterado: isAlterado, IsAtivoEmpresa: util.Switch.GetValue(e, control) });
+                });
+            }
+
+            if (isSearch) {
+                itxRegObject.searchTerm = searchValue;
+            }
+
+            $.ajax({
+                async: false,
+                url: itxRegObject.urlItxReg,
+                type: 'POST',
+                traditional: true,
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    search: itxRegObject.searchTerm
+                    , selecionadosPaginaAtual: itxRegObject.selecionadosPaginaAtual
+                    , listaTela: itxRegObject.arrayTratarItxRegs
+                    , paginate: paginate
+                    , page: itxRegObject.paginacaoItxRegs.page
+                    , take: itxRegObject.paginacaoItxRegs.rowsPerPage
+                }),
+                beforeSend: function () {
+                    $("#pleaseWaitDialog").modal('show');
+                },
+                complete: function () {
+                    $("#pleaseWaitDialog").modal('hide');
+                },
+                success: function (data) {
+                    if (data.cadastros != null && data.cadastros.length > 0) {
+                        $("#tbItxSelecionaReg tbody").html('');
+                        for (var count = 0; count < data.cadastros.length; count++) {
+
+                            var htmlLine = '<tr>';
+                            htmlLine += '<td><span>' + data.cadastros[count].Label + '</span><input type="hidden" id="hfItxRegId" value="' + data.cadastros[count].Id + '"/></td>';
+                            htmlLine += '<td class="text-center">';
+                            htmlLine += '<input type="hidden" id="hfItxAlterado" value="' + data.cadastros[count].IsAlterado + '"/>';
+                            htmlLine += '<input type="hidden" id="hfItxRegValue" value="' + data.cadastros[count].IsAtivoEmpresa + '"/>';
+                            htmlLine += '<input type="checkbox" id="chkAtivadoDesativado" class="form-control" />';
+                            htmlLine += '<span id="spTeste"></span>';
+                            htmlLine += '</td>';
+                            htmlLine += '</tr>';
+
+                            $("#tbItxSelecionaReg tbody").append(htmlLine);
+                            if (!paginate) {
+                                itxRegObject.arrayTratarItxRegs.push({ Id: data.cadastros[count].Id, IsAlterado: data.cadastros[count].IsAlterado, IsAtivoEmpresa: data.cadastros[count].IsAtivoEmpresa });
+                            } else {
+                                itxRegObject.arrayTratarItxRegs = data.listaTela;
+                            }
+                        }
+
+                        $("#tbItxSelecionaReg tbody tr").each(function (e) {
+                            var control = $(this).find("#chkAtivadoDesativado");
+                            var valueChecked = $(this).find("#hfItxRegValue").val();
+                            var ativaDesativa = (valueChecked == 'true') ? true : false;
+
+                            util.Switch.Create(e, control, $("#hfSwitchSim").val(), $("#hfSwitchNao").val(), ativaDesativa);
+
+                            control.on('switchChange.bootstrapSwitch', function (event, state) {
+                                $(this).parents().find('#hfItxAlterado').val(true);
+                            });
+                        });
+
+                        itxRegObject.paginacaoItxRegs.totalRows = data.totalRecords;
+                        itxRegObject.paginacaoItxRegs.SetTotalPages();
+                        $("#hfTotalResultadosItxReg").val(data.totalRecords);
+
+                        $("#spTotalResultadosItxReg").text($("#hfLabelTotalReg").val() + ': ' + $("#hfTotalResultadosItxReg").val());
+                        $("#paginationItxSelecionaReg").unbind("page");
+
+                        $('#paginationItxSelecionaReg').bootpag({
+                            total: itxRegObject.paginacaoItxRegs.totalPages,
+                            page: itxRegObject.paginacaoItxRegs.page,
+                            maxVisible: 3,
+                            leaps: true,
+                            firstLastUse: true,
+                            wrapClass: 'pagination',
+                        }).on("page", function paginationGrid(event, num) {
+                            itxRegObject.paginacaoItxRegs.page = num;
+                            util.ItxModal.Create(e, '', true, false, '');
+                        });
+                    }
+                    else {
+                        $("#hfTotalResultadosItxReg").val('');
+                        $("#spTotalResultadosItxReg").text($("#hfLabelTotalReg").val() + ': 0');
+
+                    }
+                }
+            });
+        },
+        Save: function (e, url) {
+            itxRegObject.selecionadosPaginaAtual = [];
+
+            $("#tbItxSelecionaReg tbody tr").each(function (e) {
+                var id = $(this).find("#hfItxRegId").val();
+                var control = $(this).find("#chkAtivadoDesativado");
+                var isAlterado = $(this).find("#hfItxAlterado").val();
+                $("#myItxSelecionaReg").modal('hide');
+                itxRegObject.selecionadosPaginaAtual.push({ Id: id, IsAlterado: isAlterado, IsAtivoEmpresa: util.Switch.GetValue(e, control) });
+            });
+
+            $.ajax({
+                async: false,
+                url: url,
+                type: 'POST',
+                traditional: true,
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    selecionadosPaginaAtual: itxRegObject.selecionadosPaginaAtual
+                    , listaTela: itxRegObject.arrayTratarItxRegs
+                }),
+                success: function (data) {
+
+                    util.Modal.OpenAvisoTransactionCallback(e, data.success, data.msg, callBackRedirectItxModal);
+                }
+            });
+        },
+        EnableAllPage: function (e) {
+            $("#tbItxSelecionaReg tbody tr").each(function (e) {
+                var control = $(this).find("#chkAtivadoDesativado");
+                $(this).find("#hfItxAlterado").val(true);
+                $(this).find("#hfItxRegValue").val(true);
+                util.Switch.SetValue(e, control, true);
+            });
+        },
+        DisableAllPage: function (e) {
+            $("#tbItxSelecionaReg tbody tr").each(function (e) {
+                var control = $(this).find("#chkAtivadoDesativado");
+                $(this).find("#hfItxAlterado").val(true);
+                $(this).find("#hfItxRegValue").val(false);
+                util.Switch.SetValue(e, control, false);
+            });
+        },
+        EnableOrDisableAll: function (e, enable) {
+            $.ajax({
+                async: false,
+                data: { habilita: $("#hfHabilitaDesabilitaTodos").val(), funcionalidade: $("#hfFuncionalidade").val() },
+                url: $("#pathHabilitaDesabilitaTodosItx").val(),
+                type: 'GET',
+                beforeSend: function () {
+                    $("#pleaseWaitDialog").modal('show');
+                },
+                complete: function () {
+                    $("#pleaseWaitDialog").modal('hide');
+                },
+                success: function (data) {
+                    $("#myItxSelecionaReg").modal('hide');
+
+                    var message = data.success ? $("#hfMensagemOperacaoConcluidaSucesso").val() : $("#hfMensagemOperacaoConcluidaFalha").val();
+
+                    util.Modal.OpenAvisoTransactionCallback(e, data.success, message, callBackRedirectItxModal);
+                }
+            })
+        }
+    },
+
+    Modal: {
+        OpenAvisoPesquisa: function (e, callback) {
+            var callBackFunction = callback;
+
+            $("#myAvisoPesquisa").modal({ backdrop: 'static', keyboard: false }, 'show');
+
+            $("#myAvisoPesquisa").undelegate('#btnSimAvisoPesquisa', 'click');
+            $("#myAvisoPesquisa").delegate('#btnSimAvisoPesquisa', 'click', function (e) {
+                $("#myAvisoPesquisa").modal('hide');
+                callBackFunction(e);
+            });
+
+            $("#myAvisoPesquisa").undelegate('#btnNaoAvisoPesquisa', 'click');
+            $("#myAvisoPesquisa").delegate('#btnNaoAvisoPesquisa', 'click', function (e) {
+                $("#myAvisoPesquisa").modal('hide');
+            });
+        },
+        OpenAvisoAntesAcaoGenerico: function (e, modalType, headerMsg, titleMsg, contentMsg, callback, okVisibleButton, simVisibleButton, naoVisibleButton) {
+            var callBackFunction = callback;
+            $("#modalType").removeClass();
+
+            if (modalType == 'success') { $("#modalType").addClass('alert alert-block alert alert-success fade in'); }
+            if (modalType == 'info') { $("#modalType").addClass('fade in'); }
+            if (modalType == 'warning') { $("#modalType").addClass('alert alert-block alert alert-warning fade in'); }
+            if (modalType == 'danger') { $("#modalType").addClass('alert alert-block alert alert-danger fade in'); }
+
+            $("#spTituloModalAcaoGenerico").text(headerMsg);
+            $("#spSubtituloModalAcaoGenerico").text(titleMsg);
+            $("#spConteudoModalAcaoGenerico").text(contentMsg);
+
+            $("#myAvisoAcaoGenerico").modal({ backdrop: 'static', keyboard: false }, 'show');
+
+            if (simVisibleButton) {
+                $("#btnSimAvisoAcaoGenerico").css("display", "");
+
+                $("#myAvisoAcaoGenerico").undelegate('#btnSimAvisoAcaoGenerico', 'click');
+                $("#myAvisoAcaoGenerico").delegate('#btnSimAvisoAcaoGenerico', 'click', function (e) {
+                    callBackFunction(e);
+                    $("#myAvisoAcaoGenerico").modal('hide');
+                });
+            } else {
+                $("#btnSimAvisoAcaoGenerico").css("display", "none");
+            }
+
+            if (naoVisibleButton) {
+                $("#btnNaoAvisoAcaoGenerico").css("display", "");
+
+                $("#myAvisoAcaoGenerico").undelegate('#btnNaoAvisoAcaoGenerico', 'click');
+                $("#myAvisoAcaoGenerico").delegate('#btnNaoAvisoAcaoGenerico', 'click', function (e) {
+                    $("#myAvisoAcaoGenerico").modal('hide');
+                });
+            } else {
+                $("#btnNaoAvisoAcaoGenerico").css("display", "none");
+            }
+
+            if (okVisibleButton) {
+                $("#btnOkAvisoAcaoGenerico").css("display", "");
+
+                $("#myAvisoAcaoGenerico").undelegate('#btnOkAvisoAcaoGenerico', 'click');
+                $("#myAvisoAcaoGenerico").delegate('#btnOkAvisoAcaoGenerico', 'click', function (e) {
+                    $("#myAvisoAcaoGenerico").modal('hide');
+                });
+
+            } else {
+                $("#btnOkAvisoAcaoGenerico").css("display", "none");
+            }
+        },
+        OpenAvisoExcluir: function (e, headerMsg, titleMsg, contentMsg, callback) {
+            var callBackFunction = callback;
+            $("#spTituloModalAvisoExcluir").text(headerMsg);
+            // $("#spSubtituloModalAvisoExcluir").text(titleMsg);
+            // $("#spConteudoModalAvisoExcluir").text(contentMsg);
+
+            $("#myExcluir").modal({ backdrop: 'static', keyboard: false }, 'show');
+
+            $("#myExcluir").undelegate('#btnSimAvisoExcluir', 'click');
+            $("#myExcluir").delegate('#btnSimAvisoExcluir', 'click', function (e) {
+                callBackFunction(e);
+                $("#myExcluir").modal('hide');
+            });
+
+            $("#myExcluir").undelegate('#btnNaoAvisoExcluir', 'click');
+            $("#myExcluir").delegate('#btnNaoAvisoExcluir', 'click', function (e) {
+                $("#myExcluir").modal('hide');
+            });
+        },
+        OpenAvisoTransactionCallback: function (e, sucess, message, callbackRedirect) {
+
+            if (sucess) {
+                $("#myCallBackSuccess").modal('show');
+                $("#msgCallbackSuccess").text(message);
+
+                $("#myCallBackSuccess").undelegate('#btnCallbackSuccessSair', 'click');
+                $("#myCallBackSuccess").delegate('#btnCallbackSuccessSair', 'click', function (e) {
+                    $("#myCallBackSuccess").modal('hide');
+                });
+
+                if (callbackRedirect != null) {
+                    callbackRedirect();
+                }
+            }
+            else {
+                $("#myCallBackErro").modal('show');
+                $("#msgCallbackErro").text(message);
+
+                $("#myCallBackErro").undelegate('#btnCallbackErroSair', 'click');
+                $("#myCallBackErro").delegate('#btnCallbackErroSair', 'click', function (e) {
+                    $("#myCallBackErro").modal('hide');
+                });
+            }
+        },
+    },
+
+    Mask: {
+        TEL: function (telSeletor) { telSeletor.mask("(99) 9999-9999"); },
+        CEL: function (telSeletor) {
+            telSeletor.mask("(99) 9999-9999?9")
+                .focusout(function (event) {
+                    var target, phone, element;
+                    target = (event.currentTarget) ? event.currentTarget : event.srcElement;
+                    phone = target.value.replace(/\D/g, '');
+                    element = $(target);
+                    element.unmask();
+                    if (phone.length > 10) {
+                        element.mask("(99) 99999-999?9");
+                    } else {
+                        element.mask("(99) 9999-9999?9");
+                    }
+                });
+        },
+        CNPJ: function (cnpjSeletor) { cnpjSeletor.mask("99.999.999/9999-99"); },
+        CPF: function (cpfSeletor) { cpfSeletor.mask("999.999.999-99"); },
+        CEP: function (cepSeletor) { cepSeletor.mask("99.999-999"); },
+        Data: function (dataSeletor) {
+            dataSeletor.datepicker(
+                {
+                    isRTL: false,
+                    format: 'dd/mm/yyyy',
+                    autoclose: true,
+                    language: 'pt',
+                    viewmode: 'days',
+                    icons: {
+                        time: "fa fa-clock-o",
+                        date: "fa fa-calendar",
+                        up: "fa fa-arrow-up",
+                        down: "fa fa-arrow-down"
+                    }
+                });
+        },
+        Switch: function (checkboxSelector) {
+            $(checkboxSelector).bootstrapSwitch({
+                size: 'small',
+                setSizeClass: 'small',
+            });
+        }, 
+        PaisDropdown: function (selectSelector, removeFlag, setSelectedItem) {
+            util.Flags.GetPaises();
+
+            selectSelector.select2({
+                data: PaisDropdownSource
+            });
+
+            if (setSelectedItem) {
+                if ($("#ddPais").val().length > 0) {
+                    selectSelector.select2("val", $("#ddPais").val());
+                }
+            }
+            util.Mask.EstadoDropdown($("#ddEstado"), true, setSelectedItem);
+        },
+
+               EstadoDropdown: function (selectSelector, removeFlag, setSelectedItem) {
+               util.Flags.GetEstados();
+               setSelectedItem = $('#ddEstado').val();
+                  if (setSelectedItem) {
+                     if ($("#ddEstado").val().length > 0) {
+                    selectSelector.select2("val", $("#ddEstado").val());
+                }
+            }
+            if ($('#ddEstado').val() != "") {
+
+                $('#ddEstado')
+                    .find('option')
+                    .remove()
+                    .end();
+            }          
+          
+          selectSelector.select2({
+                data: EstadoDropdownSource
+          });
+
+            if (setSelectedItem) {
+                    selectSelector.select2("val", setSelectedItem);
+                
+            }
+            util.Mask.CidadeDropdown($("#ddCidade"), true);
+
+        },
+
+        CidadeDropdown: function (selectSelector, removeFlag, setSelectedItem) {
+            util.Flags.GetCidades();           
+
+            setSelectedItem = $('#ddCidade').val();
+            if (setSelectedItem) {
+                if ($("#ddCidade").val().length > 0) {
+                    selectSelector.select2("val", $("#ddCidade").val());
+                }
+            }
+
+            $('#ddCidade')
+                .find('option')
+                .remove()
+                .end();
+
+            selectSelector.select2({
+                data: CidadeDropdownSource
+            });
+
+            if (setSelectedItem) {
+                selectSelector.select2("val", setSelectedItem);
+                
+            }
+        },
+        CultureDropdown: function (selectSelector, removeFlag, setSelectedItem) {
+            util.Flags.GetIdiomasAtivos();
+
+            function formatResult(item) {
+                var $state = $(util.Flags.GetFlagsFormatSelectOption(item.id, item.text));
+                return $state;
+            }
+
+            function formatSelection(item) {
+
+                var $state = $(util.Flags.SetFlagsFormatSelectOption(item.id, item.text));
+                return $state;
+            }
+
+            selectSelector.select2({
+                templateResult: formatResult,
+                templateSelection: formatSelection,
+                data: CultureDropdownSource
+            });
+
+            if (setSelectedItem) {
+                if ($("#hfIdioma").val().length > 0) {
+                    selectSelector.select2("val", $("#hfIdioma").val());
+                }
+            }
+        },
+        TipoEPIDropdown: function (selectSelector, removeFlag, setSelectedItem) {
+            util.Flags.GetTipoEPI();
+
+            selectSelector.select2({
+                data: TipoDropdownSource
+            });
+
+            if (setSelectedItem) {
+                if ($("#ddTipoEPI").val().length > 0) {
+                    selectSelector.select2("val", $("#ddTipoEPI").val());
+                }
+            }
+        },
+    },
+
+    DataTable: {
+        SimpleDataTable: function (tableSelector) {
+
+            tableSelector.DataTable({
+                "bPaginate": false,
+                "bSort": false,
+                bFilter: false, bInfo: false
+                //, "oLanguage": { "sZeroRecords": "", "sEmptyTable": "" }
+
+            });
+
+            tableSelector.find('tbody .odd').remove();
+        },
+        AddRowSimpleDataTable: function (tableSelector, htmlRow) {
+            tableSelector.DataTable().row.add([htmlRow]);
+        },
+        RemoveRowSimpleDataTable: function (htmlRow) {
+            htmlRow.remove();
+        }
+    },
+
+    Validacao: {
+        ValidaUIForm: function (e, formInputSelector) {
+            var validate = true;
+            //
+            $(formInputSelector).each(function () {
+                switch ($(this).attr('type')) {
+                    case "text":
+                    case "hidden":
+                    case "password":
+                    case "datetime":
+                        if (!$(this).hasClass("email")) {
+
+                            if ($(this).hasClass("required")) {
+                                if ($(this).val().length == 0) {
+                                    $(this).closest("div").addClass("has-error");
+
+                                    if (validate)
+                                        validate = false;
+                                }
+                                else {
+                                    $(this).closest("div").removeClass("has-error");
+                                }
+                            }
+                        }
+                    case "checkbox":
+                    case "button":
+                }
+            });
+            return validate;
+        },
+        ComboSelectedValue: function (seletorCombo, valueNotAllow) {
+            var validateCombo = true;
+
+            if ((seletorCombo).val() == valueNotAllow) {
+                $(seletorCombo).closest("div").addClass("has-error");
+                validateCombo = false;
+            }
+            else {
+                $(seletorCombo).closest("div").removeClass("has-error");
+            }
+
+            return validateCombo;
+        },
+        MaxLength: function (seletorMaxLenght, maxLenght) { $(seletorMaxLenght).attr('maxlength', maxLenght); },
+        OnlyNumber: function (textboxSeletor) {
+            $(textboxSeletor).keydown(function (e) {
+                // Allow: backspace, delete, tab, escape, enter and .
+                if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+                    // Allow: Ctrl+A, Command+A
+                    (e.keyCode == 65 && (e.ctrlKey === true || e.metaKey === true)) ||
+                    // Allow: home, end, left, right, down, up
+                    (e.keyCode >= 35 && e.keyCode <= 40)) {
+                    // let it happen, don't do anything
+                    return;
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+        },
+        Email: function (emailSeletor) {
+            var re = /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+            var valida = re.test(emailSeletor.val());
+
+            if (!valida) {
+                $(emailSeletor).closest("div").addClass("has-error");
+            } else {
+                $(emailSeletor).closest("div").removeClass("has-error");
+            }
+
+            return valida;
+        }
+    },
+
+    Events: {
+        ChangeCulture: function (e, isMenu, isFields, isAjax, isUpdateIdiomaUser) {
+
+            $.ajax({
+                async: false,
+                url: $("#pathCulture").val(),
+                delay: 3000,
+                data: {
+                    funcionalidadeId: $("#hfFuncionalidade").val(),
+                    idiomaId: $("#hfIdioma").val(),
+                    sistemaId: $("#hfSistema").val(),
+                    isMenu: isMenu,
+                    isFields: isFields,
+                    isUpdateIdiomaUser: isUpdateIdiomaUser
+                },
+                type: 'GET',
+                success: function (data) {
+                    todasAsTraducoes = data;
+
+                    if (!isAjax) {
+                        if (isMenu) {
+                            if (data.traducaoMenu != null && data.traducaoMenu.length > 0) {
+                                $("#sidebar-nav").html(data.traducaoMenu);
+
+                                $(".submenu").undelegate('li', 'click');
+                                $(".submenu").delegate('li', 'click', function (e) {
+                                    $("#pleaseWaitDialog").modal('show');
+                                });
+                            }
+                        }
+                    }
+
+
+                    if (isFields) {
+                        if (callbackCultureFunction != null) {
+
+                            if (data.traducaoPagina != null && data.traducaoPagina.length > 0) {
+                                for (var i = 0; i < data.traducaoPagina.length; i++) {
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Traducoes') {
+                                        $("#spTraducoes").text(data.traducaoPagina[i].Texto);
+                                        $("#spTraducaoVisualizar").text(data.traducaoPagina[i].Texto);
+                                        $("#tituloHeaderInclusaoTraducao").text(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_TotalReg') {
+                                        $("#hfLabelTotalReg").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfMsgItxRegsSalvos").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfRegExcluir").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_RegNaoPermitidoItxReg') {
+                                        $("#hfRegNaoPermitidoItxReg").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfMsgRegInserir").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfMsgRegEditar").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_RegFalha') {
+                                        $("#hfMsgRegFalha").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_TraducaoAutomatica') {
+                                        $("#btnTraduzirSintoma").text(data.traducaoPagina[i].Texto)
+                                        $("#btnTraduzirSintoma").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Breadcumb1') {
+                                        $("#breadcumb1").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_IdiomaExistente') {
+                                        $("#hfMsgExisteTraducaoRegistro").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_IdiomaInformadoCadastro') {
+                                        $("#hfMsgTraducaoExistente").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_InformarCondicao') {
+                                        $("#spConteudoModalAvisoPesquisa").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ItxRegsAtivarDesativaCadastrosEmpresa') {
+                                        $("#tituloHeaderItxSelecionaReg").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ItxRegsAtivo') {
+                                        $("#acoes1 #lblBtnAcoes1").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acoes1").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ItxRegsDesativar') {
+                                        $("#acoes2 #lblBtnAcoes2").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acoes2").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Descricao') {
+                                        $("#lblItxSelecionaRegDescr").text(data.traducaoPagina[i].Texto)
+                                        $("#spTituloItxSelecionaReg").text(data.traducaoPagina[i].Texto)
+                                    }
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ItxRegsTodosPagina') {
+                                        $("#acAtivaTodosPagIxtReg #lblAtivaTodosPagIxtReg").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acAtivaTodosPagIxtReg").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#acDesativaTodosPagIxtReg #lblDesativaTodosPagIxtReg").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acDesativaTodosPagIxtReg").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_SalvarComo') {
+                                        $("#acSalvarComo #lblAcaoSalvarComo").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acSalvarComo").attr('title', data.traducaoPagina[i].Texto)
+                                        $("#hfLabelBotaoSalvarComo").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Todos') {
+                                        $("#acAtivaTodosIxtReg #lblAtivaTodosIxtReg").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acAtivaTodosIxtReg").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#acDesativaTodosIxtReg #lblDesativaTodosIxtReg").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#acDesativaTodosIxtReg").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#spIdiomaTodos").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Visualizar') {
+                                        $("#acVisualizar #lblAcaoVisualizar").text(data.traducaoPagina[i].Texto)
+                                        $("#acVisualizar").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Nao') {
+                                        $("#btnNaoAvisoAcaoGenerico #lblNaoAvisoAcaoGenerico").text(data.traducaoPagina[i].Texto)
+                                        $("#btnNaoAvisoAcaoGenerico").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#btnNaoAvisoPesquisa #lblNaoAvisoPesquisa").text(data.traducaoPagina[i].Texto)
+                                        $("#btnNaoAvisoPesquisa").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#btnNaoAvisoExcluir #lblNaoAvisoExcluir").text(data.traducaoPagina[i].Texto)
+                                        $("#btnNaoAvisoExcluir").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#hfSwitchNao").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Sim') {
+                                        $("#btnSimAvisoAcaoGenerico #lblSimAvisoAcaoGenerico").text(data.traducaoPagina[i].Texto)
+                                        $("#btnSimAvisoAcaoGenerico").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#btnSimAvisoPesquisa #lblSimAvisoPesquisa").text(data.traducaoPagina[i].Texto)
+                                        $("#btnSimAvisoPesquisa").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#btnSimAvisoExcluir #lblSimAvisoExcluir").text(data.traducaoPagina[i].Texto)
+                                        $("#btnSimAvisoExcluir").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#hfSwitchSim").val(data.traducaoPagina[i].Texto);
+                                    }
+
+
+                                    if (data.traducaoPagina[i].Identificador == 'Cancelar') {
+                                        $("#btnCancelarItxSelecionaReg").attr('title', data.traducaoPagina[i].Texto)
+                                        $("#btnCancelarItxSelecionaReg").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ItxRegsAtivarDesativaCadastrosEmpresa') {
+                                        $("#acAtivaDesativa").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_AtivarDesativar') {
+                                        $("#lblAtivaDesativa").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Excluir') {
+                                        $("#acExcluir #lblAcaoExcluir").text(data.traducaoPagina[i].Texto)
+                                        $("#spSubtituloModalAvisoExcluir").text(data.traducaoPagina[i].Texto);
+                                        $("#hfMsgExcluir").val(data.traducaoPagina[i].Texto);
+                                        $("#hfLabelBotaoExcluir").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Salvar') {
+                                        $("#btnSalvarItxSelecionaReg #lblSalvarItxSelecionaReg").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#btnSalvarItxSelecionaReg").attr('title', data.traducaoPagina[i].Texto)
+                                        $("#hfLabelBotaoSalvar").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Acao') {
+                                        $("#acoes #lblBtnAcoes").text(data.traducaoPagina[i].Texto + ' ')
+                                        $("#acoes").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Atencao') {
+                                        $("#hfMsgAtencao").val(data.traducaoPagina[i].Texto);
+                                        $("#spTituloModalAvisoPesquisa").text(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_Editar') {
+                                        $("#openEditarModal").attr('title', data.traducaoPagina[i].Texto)
+                                        $("#openEditarModal #lnkEditar").text(' ' + data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ExcluirRegistro') {
+                                        $("#acExcluir").attr('title', data.traducaoPagina[i].Texto)
+                                        $("#hfMsgExcluir").val(data.traducaoPagina[i].Texto);
+                                        $("#spConteudoModalAvisoExcluir").text(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Incluir') {
+                                        $("#openNovoModal #lnkNovo").text(' ' + data.traducaoPagina[i].Texto)
+                                        $("#openNovoModal").attr('title', data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Pesquisar') {
+                                        $("#pesquisar #spBtnPesquisar").text(" " + data.traducaoPagina[i].Texto)
+                                        $("#pesquisar").attr('title', data.traducaoPagina[i].Texto)
+
+                                        $("#spSubtituloModalAvisoPesquisa").text(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfMensagemOperacaoConcluidaSucesso").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaFalha') {
+                                        $("#hfMensagemOperacaoConcluidaFalha").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_RealizePesquisaAcima') {
+                                        $("#spRealizeAPesquisa").text(data.traducaoPagina[i].Texto)
+                                    }
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_OperacaoConcluidaSucesso') {
+                                        $("#hfMensagemRegistroSucesso").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_RegistroSalvoFalha') {
+                                        $("#hfMensagemRegistroFalha").val(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_NaoPossuiRegistros') {
+                                        $("#spNaoPossuiReg").text(data.traducaoPagina[i].Texto)
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_SelecioneRegistroGrid') {
+                                        $("#hfMsgSelecioneRegGrid").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_SelecioneRegistroGridIntertox') {
+                                        $("#hfMsgRegistroCopiado").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_SubTituloRegIntertox') {
+                                        $("#hfMsgSubTituloItxReg").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ConteudoAtivaRegIntertox') {
+
+                                        $("#hfMsgConteudoAtivarItxReg").val(data.traducaoPagina[i].Texto);
+                                    }
+
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_ConteudoDesativaRegIntertox') {
+                                        $("#hfMsgConteudoDesativarItxReg").val(data.traducaoPagina[i].Texto);
+                                    }
+                                }
+
+                                callbackCultureFunction(data.traducaoPagina);
+                            }
+                        }
+
+                        else {
+                            if (data.traducaoPagina != null && data.traducaoPagina.length > 0) {
+                                for (var i = 0; i < data.traducaoPagina.length; i++) {
+                                    if (data.traducaoPagina[i].Identificador == 'Geral_SessaoExpirada') {
+                                        textAlertFimSessao = data.traducaoPagina[i].Texto;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (callbackDropdownFunction != null) {
+                            callbackDropdownFunction(e, $("#hfIdioma").val());
+                        }
+                    }
+                }
+            });
+        },
+        GetUserActiveCulture: function (e) {
+            $.ajax({
+                async: false,
+                url: $("#pathUserCulture").val(),
+                type: 'POST',
+                success: function (data) {
+                    $("#hfIdioma").val(data.idiomaId);
+                    $("#hfSistema").val(data.sistemaId);
+                    $("#hfGrupoPermissao").val(data.grupoPermissaoId);
+                    idiomaIdSistemaUser = data.idiomaId;
+                }
+            });
+        },
+
+        TranslateIdiomas: function (e, textoDestino, idiomaOrigem, idiomasDestinos, idiomaIdDestinos, callBackFunction) {
+            $.ajax({
+                data: { list: textoDestino, idiomaOrigem: idiomaOrigem, idiomasDestinos: idiomasDestinos },
+                beforeSend: function () {
+                    $("#pleaseWaitDialog").modal('show');
+                },
+                complete: function () {
+                    $("#pleaseWaitDialog").modal('hide');
+                },
+                url: $("#pathTraduzirEmVariosTextos").val(),
+                type: 'POST',
+                success: function (data) {
+                    if (callBackFunction != null) {
+                        callBackFunction(data.traducoes, idiomaIdDestinos);
+                    }
+                }
+            });
+        },
+
+        Translate: function (e, list, idiomaOrigem, idiomaDestino, callbackFunction) {
+
+            $.ajax({
+                async: false,
+                traditional: true,
+                data: { list: list, idiomaOrigem: idiomaOrigem, idiomaDestino: idiomaDestino },
+                url: $("#pathTranslate").val(),
+                type: 'POST',
+                beforeSend: function () {
+                    $("#pleaseWaitDialog").modal('show');
+                },
+                complete: function () {
+                    $("#pleaseWaitDialog").modal('hide');
+                },
+                success: function (data) {
+                    if (callbackFunction != null) {
+                        callbackFunction(data.traducoes);
+                    }
+                }
+            });
+        },
+
+        TraducaoIdiomasPorIdentificador: function (identificador) {
+            let texto = "";
+
+            todasAsTraducoes.traducaoPagina.forEach(item => {
+                if (item.Identificador == identificador) {
+                    texto = item.Texto;
+                }
+            });
+
+            return texto;
+        },
+
+        SetFuncionalidadeAtual: function (e, funcionalidadeId) { $("#hfFuncionalidade").val(funcionalidadeId) },
+        LogOut: function (e) {
+            $.ajax({
+                async: false,
+                traditional: true,
+                url: $("#pathLogOut").val(),
+                type: 'GET',
+                beforeSend: function () {
+                    $("#pleaseWaitDialog").modal('show');
+                },
+                complete: function () {
+                    $("#pleaseWaitDialog").modal('hide');
+                },
+                success: function (data) {
+                    window.location = data.url;
+                }
+            });
+        },
+        FecharBrowser: function (e) {
+            window.onbeforeunload = FechaSessao;
+            var ifMySelClosed = false; //variavel que define se ele mesmo que esta sendo fechado
+            var IE = document.all ? true : false;
+            if (!IE) document.captureEvents(Event.MOUSEMOVE)
+            document.onmousemove = getMouseXY;
+            var tempY = 0;
+
+            function getMouseXY(e) {
+                if (IE) { // grab the x-y pos.s if browser is IE
+                    tempY = event.clientY + document.body.scrollTop;
+                }
+                else { // grab the x-y pos.s if browser is NS
+                    tempY = e.pageY;
+                }
+                if (tempY < 0) { tempY = 0; }
+                //document.getElementById('MouseY').value=tempY; 
+                return true;
+            }
+            function FechaSessao(e) {
+                //e.preventDefault();
+                var bool = false;
+                var top = self.screenTop;
+                //controle de fechar com o botao direito do mouse na barra de tarefas (quando está minimizado)
+                if ((top <= -30000) && (top >= -32000)) {
+                    bool = true;
+                }
+                //controle de fechar com o botao direito do mouse na barra de tarefas
+                if (tempY <= 6)
+                    bool = true;
+                if (bool) {
+                    //se não for ele que clicou no sair entao nao entra.
+                    if (!ifMySelClosed) {
+                        util.Events.LogOut(e);
+                    }
+                }
+            }
+        },
+        ChangeEmpresaLogada: function (e, empresaId) {
+            var login = {
+                Usuario: null,
+                LoginValido: true,
+                EmpresaId: empresaId,
+                UsuariosEmpresas: null,
+                MudouDeEmpresaEstandoLogado: true
+            };
+
+            $.ajax({
+                url: '/Login/MudarEmpresaLogada',
+                data: JSON.stringify(login),
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                dataType: "json",
+                success: function (data) {
+
+                    if (data.success) {
+                        util.Events.ChangeCulture(e, true, true, true, false);
+                        location = '/NewSafetyChem';
+                    }
+                    else {
+                        empresas.Controller.ShowErrorMessage(data);
+                    }
+                }
+            });
+        }
+    },
+
+    Flags: {
+        GetPaises: function () {
+
+            if (!(PaisDropdownSource != null && PaisDropdownSource.length > 0)) {
+                PaisDropdownSource = null;
+                PaisDropdownSource = [];
+
+                $.ajax({
+                    async: false,
+                    url: $("#pathPaises").val(),
+                    type: 'GET',
+                    beforeSend: function () {
+                        $("#pleaseWaitDialog").modal('show');
+                    },
+                    complete: function () {
+                        $("#pleaseWaitDialog").modal('hide');
+                    },
+                    data: {
+                        paisDescr: ""
+                        , page: 1
+                        , take: 1000
+                        , idiomaSistemaId: $('#hfIdioma').val()
+                        , tipo: "search"
+                    },
+                    success: function (data) {
+
+                        if (data.paises != null && data.paises.length > 0) {
+                            for (var i = 0; i < data.paises.length; i++) {
+                                PaisDropdownSource.push({
+                                    text: data.paises[i].Descricao
+                                    , id: data.paises[i].PaisId
+                                })
+                            }
+                        }
+                    }
+                });
+            }
+        },
+        GetEstados: function () {
+
+            if (EstadoDropdownSource = null && EstadoDropdownSource.length == 0) {
+                EstadoDropdownSource = null;
+                EstadoDropdownSource = [];
+            }
+
+            if (!(EstadoDropdownSource != null && EstadoDropdownSource.length > 0)) {
+                EstadoDropdownSource = null;
+                EstadoDropdownSource = [];
+
+                $.ajax({
+                    async: false,
+                    url: $("#pathEstados").val(),
+                    type: 'GET',
+                    beforeSend: function () {
+                        $("#pleaseWaitDialog").modal('show');
+                    },
+                    complete: function () {
+                        $("#pleaseWaitDialog").modal('hide');
+                    },
+                    data: {
+                        estadoDescr: ""
+                        , paisId: $("#ddPais").val()
+                        , page: 1
+                        , take: 1000
+                        , tipo: "search"
+                    },
+                    success: function (data) {
+                        if (data.estados != null && data.estados.length > 0) {
+                            for (var i = 0; i < data.estados.length; i++) {
+                                EstadoDropdownSource.push({
+                                    text: data.estados[i].Descricao
+                                    , id: data.estados[i].EstadoId
+                                })
+                            }
+                        }
+                    }
+                });
+            }
+        },
+
+        GetCidades: function () {
+
+            if (CidadeDropdownSource = null && CidadeDropdownSource.length == 0) {
+                CidadeDropdownSource = null;
+                CidadeDropdownSource = [];
+            }
+
+            if (!(CidadeDropdownSource != null && CidadeDropdownSource.length > 0)) {
+                CidadeDropdownSource = null;
+                CidadeDropdownSource = [];
+
+                $.ajax({
+                    async: false,
+                    url: $("#pathCidades").val(),
+                    type: 'GET',
+                    beforeSend: function () {
+                        $("#pleaseWaitDialog").modal('show');
+                    },
+                    complete: function () {
+                        $("#pleaseWaitDialog").modal('hide');
+                    },
+                    data: {
+                        cidadeDescr: ""
+                        , estadoId: $("#ddEstado").val()
+                        , page: 1
+                        , take: 1000
+                        , tipo: "search"
+                    },
+                    success: function (data) {
+                        if (data.cidades != null && data.cidades.length > 0) {
+                            for (var i = 0; i < data.cidades.length; i++) {
+                                CidadeDropdownSource.push({
+                                    text: data.cidades[i].Descricao
+                                    , id: data.cidades[i].CidadeId
+                                })
+                            }
+                        }
+                    }
+                });
+            }
+        },
+        GetIdiomasAtivos: function () {
+
+            if (!(CultureDropdownSource != null && CultureDropdownSource.length > 0)) {
+                CultureDropdownSource = null;
+                CultureDropdownSource = [];
+
+                $.ajax({
+                    async: false,
+                    url: $("#pathComboCulture").val(),
+                    type: 'GET',
+                    beforeSend: function () {
+                        $("#pleaseWaitDialog").modal('show');
+                    },
+                    complete: function () {
+                        $("#pleaseWaitDialog").modal('hide');
+                    },
+                    success: function (data) {
+
+                        if (data.idiomas != null && data.idiomas.length > 0) {
+                            traducoesIdiomasCulturas = data.idiomas;
+
+                            for (var i = 0; i < data.idiomas.length; i++) {
+                                CultureDropdownSource.push({
+                                    text: data.idiomas[i].Nome,
+                                    id: data.idiomas[i].IdiomaId,
+                                });
+
+                                traducoesIdiomas = data.idiomas[i];
+                            }
+                        }
+                    }
+                });
+
+            }
+        },
+        GetTipoEPI: function () {
+
+            if (!(TipoDropdownSource != null && TipoDropdownSource.length > 0)) {
+                TipoDropdownSource = null;
+                TipoDropdownSource = [];
+
+                $.ajax({
+                    async: false,
+                    url: $("#pathTipoEPI").val(),
+                    type: 'GET',
+                    beforeSend: function () {
+                        $("#pleaseWaitDialog").modal('show');
+                    },
+                    complete: function () {
+                        $("#pleaseWaitDialog").modal('hide');
+                    },
+                    data: {
+                        search: " "
+                        , page: 1
+                        , take: 20
+                    },
+                    success: function (data) {
+                        
+
+                        if (data != null && data.length > 0) {
+                            for (var i = 0; i < data.length; i++) {                            
+                                TipoDropdownSource.push({
+                                    text: data[i].Descricao
+                                    , id: data[i].EPITipoId
+                                })                    
+                            }
+                        }
+                      
+                    },
+                    error: function (e) {
+                        alert('error' + e);
+                    },
+                });
+            }
+        },
+        GetFlags: function (PaisId) {
+            if (PaisId == 1) {
+                return '<span class="flagHeader flag-brasil"></span>';
+            }
+
+            if (PaisId == 2) {
+                return '<span class="flagHeader flag-estadosunidos"></span>';
+            }
+
+            if (PaisId == 3) {
+                return '<span class="flagHeader flag-espanha" ></span>';
+            }
+
+            if (PaisId == 4) {
+                return '<span class="flagHeader flag-germany"></span>'
+            }
+        },
+        GetFlagsGrid: function (PaisId) {
+            if (PaisId == 0) {
+                return '';
+            }
+            if (PaisId == 1) {
+                return '<span class="flagHeader flag-brasil" style="margin: 0 50%;"></span>';
+            }
+
+            if (PaisId == 2) {
+                return '<span class="flagHeader flag-estadosunidos" style="margin: 0 50%;"></span>';
+            }
+
+            if (PaisId == 3) {
+                return '<span class="flagHeader flag-espanha" style="margin: 0 50%;"></span>';
+            }
+
+            if (PaisId == 4) {
+                return '<span class="flagHeader flag-germany" style="margin: 0 50%;"></span>';
+            }
+
+        },
+        GetFlagClassGrid: function (PaisId) {
+            if (PaisId == 0) {
+                return '';
+            }
+            if (PaisId == 1) {
+                return 'flagHeader flag-brasil';
+            }
+
+            if (PaisId == 2) {
+                return 'flagHeader flag-estadosunidos';
+            }
+
+            if (PaisId == 3) {
+                return 'flagHeader flag-espanha';
+            }
+
+            if (PaisId == 4) {
+                return 'flagHeader flag-germany';
+            }
+        },
+        GetFlagsFormatSelectOption: function (PaisId, Pais) {
+            if (PaisId == 0) {
+                return '<span></span><span id="spIdiomaTodos"></span></i>';
+            }
+
+            if (PaisId == 1) {
+                return '<span class="flagCombo flag-brasil"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 2) {
+                return '<span class="flagCombo flag-estadosunidos"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 3) {
+                return '<span class="flagCombo flag-espanha"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 4) {
+                return '<span class="flagCombo flag-germany"></span> ' + Pais + '</i>';
+            }
+
+        },
+        SetFlagsFormatSelectOption: function (PaisId, Pais) {
+            //if (PaisId == 0) {
+            //    return '<span></span><span id="spIdiomaTodos"></span></i>';
+            //}
+            if (PaisId == 1) {
+                return '<span class="flagComboSelecionado flag-brasil"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 2) {
+                return '<span class="flagComboSelecionado flag-estadosunidos"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 3) {
+                return '<span class="flagComboSelecionado flag-espanha"></span> ' + Pais + '</i>';
+            }
+            if (PaisId == 4) {
+                return '<span class="flagComboSelecionado flag-germany"></span> ' + Pais + '</i>';
+            }
+        },
+        SetFirstFlag: function (e) {
+            if ($("#hfIdioma").val() == 1) {
+                return '<span class="flagHeader flag-brasil"></span> Português   <i class="fa fa-caret-down"></i>';
+            }
+            if ($("#hfIdioma").val() == 2) {
+                return '<span class="flagHeader flag-estadosunidos"></span> English   <i class="fa fa-caret-down"></i>';
+            }
+            if ($("#hfIdioma").val() == 3) {
+                return '<span class="flagHeader flag-espanha"></span> Espanõl   <i class="fa fa-caret-down"></i>';
+            }
+            if ($("#hfIdioma").val() == 4) {
+                return '<span class="flagHeader flag-germany"></span> Alemão   <i class="fa fa-caret-down"></i>';
+            }
+        },
+        GetGoogleTranslatorLanguage: function (languageValue) {
+            if (languageValue == '1') { return "pt" }
+            if (languageValue == '2') { return "en" }
+            if (languageValue == '3') { return "es" }
+            if (languageValue == '4') { return "de" }
+        }
+    },
+
+    Utils: {
+        RemoveItemInArray: function (arry, item) {
+            index = arry.indexOf(item);
+
+            if (index >= 0) {
+                arry.splice(index, 1);
+            }
+        }
+    }
+}
+$(document).ready(function () {
+
+    ExibeModalInatividade = function () {
+
+        $("#Logout").modal({ backdrop: 'static' }, 'show');
+
+        var ehWindow = window.opener ? true : false;
+
+        if (ehWindow) {
+            $("#msgLogoutTelaPrincipal").show();
+        }
+        else {
+            $("#msgLogout").show();
+        }
+
+        $("#Logout").css("z-index", "1500");
+    };
+
+    var connection = new signalR.HubConnectionBuilder().withUrl("/hubnotification").build();
+
+    connection.on("LoginSimultaneo", function (idioma) {
+        textAlertFimSessao = idioma.mensagem;
+        $("#Logout").modal({ backdrop: 'static' }, 'show');
+        $("#msgLogoutOutroAcesso").show();
+        $("#Logout").css("z-index", "1500");
+        $("#btnLogout").click(
+            function (e) {
+                util.Events.LogOut(e);
+            });
+    });
+
+    connection.start({ pingInterval: null }).then(function () {
+        connection.invoke("Conectar")
+    });
+});
+
+var ItxRegs = function (url) {
+    this.arraySelecionadosItxRegs = [],
+        this.paginacaoItxRegs = new Pagination(),
+        this.urlItxReg = url,
+        this.searchTerm = '',
+        this.selecionadosPaginaAtual = []
+    this.arrayTratarItxRegs = [];
+};
+
+var Pagination = function (page, totalRows, rowsPerPage) {
+    this.page = page;
+    this.totalRows = totalRows;
+    this.rowsPerPage = rowsPerPage;
+    this.totalPages = 0;
+    this.sortField = '',
+        this.asc = true,
+        this.SetTotalPages();
+};
+
+Pagination.prototype.SetTotalPages = function () {
+
+    var resultOfMod = parseFloat(this.totalRows / this.rowsPerPage);
+
+    this.totalPages = (!isNaN(resultOfMod) && this.totalRows > 0) ?
+        (resultOfMod.toString().indexOf('.') != -1) ?
+            parseInt(resultOfMod) + 1 : parseInt(resultOfMod) : 0;
+}
+
+Pagination.prototype.PrintPagination = function () {
+    alert(this.page);
+    alert(this.totalRows);
+    alert(this.rowsPerPage);
+    alert(this.totalPages);
+    alert(this.sortField);
+    alert(this.asc);
+    alert(this.totalPages);
+};
+
+/*ENUM ABAS CADASTRO DE PRODUTO */
+
+var AbaProduto = {
+    Identificacao: { value: 1 },
+    Propriedades: { value: 2 },
+    PerigosFisicoes: { value: 3 },
+    PerigosSaudeI: { value: 4 },
+    PerigosSaudeII: { value: 5 },
+    MeioAmbiente: { value: 6 },
+    LEO: { value: 7 },
+    InformacoesEspecificas: { value: 8 },
+    SistemaClassificacao: { value: 9 },
+    Transporte: { value: 10 },
+    Documentos: { value: 11 },
+};
+
+var SubAbaProduto = {
+    //DADOS GERAIS
+    PropFisicasQuimicas: { value: 1 },
+    Referencias: { value: 2 },
+
+    //INFOS. ESPECÍFICAS
+    EPI: { value: 3 },
+    Reatividade: { value: 4 },
+    Modelo: { value: 5 },
+
+    //SISTEMAS DE CLASSIFICAÇÃO
+    GHS: { value: 6 },
+    Hommel: { value: 7 },
+    HMIS: { value: 8 },
+};
+
+var Ficha = {
+    FISPQ: { value: 1 },
+    SDSUS: { value: 2 },
+    SDSES: { value: 3 }
+
+};
+var PaisDropdownSource = {};
+var EstadoDropdownSource = {};
+var CidadeDropdownSource = {};
+var CultureDropdownSource = {};
+var TipoDropdownSource = {};
+
+var Funcionalidades = {
+    Home: { value: 0 },
+    ManutencaoProduto: { value: 3 },
+    GeracaodeDocumentos: { value: 14 },
+    EPI: { value: 17 },
+    OrgaoAlvo: { value: 22 },
+    Sintomas: { value: 27 },
+    Incompatibilidades: { value: 32 },
+    DocumentosPublicados: { value: 37 },
+    FabricanteFornecedor: { value: 42 },
+    Referencias: { value: 47 },
+    Siglas: { value: 52 },
+    Templates: { value: 57 },
+    JuizodeValor: { value: 62 },
+    Especies: { value: 67 },
+    Agencias: { value: 72 },
+    Modelos: { value: 77 },
+    FuncionalidadeGenericaTraducoes: { value: 82 },
+    SiglaLEO: { value: 83 },
+    Login: { value: 84 },
+    Produtos: { value: 2 },
+    ExportarDados: { value: 116 },
+    ImportarDados: { value: 121 },
+    CompartilharProduto: { value: 124 },
+    ManutencaoFluxoAprovacao: { value: 309 },
+}
+
+// ** deve-se basear no Enum_TipoFuncionalidade do fonte Enum.cs
+var Acao = {
+    Incluir: function (opcaoRotina) { return opcaoRotina.Tipo == 1 },
+    Editar: function (opcaoRotina) { return opcaoRotina.Tipo == 2 },
+    Alterar: function (opcaoRotina) { return opcaoRotina.Tipo == 2 },
+    Excluir: function (opcaoRotina) { return opcaoRotina.Tipo == 3 },
+    Apagar: function (opcaoRotina) { return opcaoRotina.Tipo == 3 },
+    Visualizar: function (opcaoRotina) { return opcaoRotina.Tipo == 4 },
+    GerarDocumento: function (opcaoRotina) { return opcaoRotina.Tipo == 5 },
+    SalvarComo: function (opcaoRotina) { return opcaoRotina.Tipo == 6 },
+    AtivarDesativar: function (opcaoRotina) { return opcaoRotina.Tipo == 7 },
+    AtivaDesativa: function (opcaoRotina) { return opcaoRotina.Tipo == 7 },
+    Versionar: function (opcaoRotina) { return opcaoRotina.Tipo == 9 }
+}
+
+// ** deve-se basear no Enum_MessageType do fonte Enum.cs
+var MessageType = {
+    Success: 0,
+    Information: 2,
+    Warning: 4,
+    Error: 8
+}
+
+// ** deve-se basear no Enum_MessageButtonType do fonte Enum.cs
+var MessageButtonType = {
+    Success: 0
+    , Default: 2
+    , Danger: 4
+    , Primary: 6
+    , Info: 8
+    , Warning: 10
+}
+
+var GoogleLanguages = {
+    Portuguese: { value: 1, name: "pt" },
+    English: { value: 2, name: "en" },
+    Spanish: { value: 3, name: "es" },
+    Armenian: { value: 0, name: "hy" },
+    Azerbaijani: { value: 0, name: "az" },
+    Basque: { value: 0, name: "eu" },
+    Belarusian: { value: 0, name: "be" },
+    Bengali: { value: 0, name: "bn" },
+    Bosnian: { value: 0, name: "bs" },
+    Bulgarian: { value: 0, name: "bg" },
+    Catalan: { value: 0, name: "ca" },
+    Cebuano: { value: 0, name: "ceb", },
+    Chichewa: { value: 0, name: "ny" },
+    ChineseSimplified: { value: 0, name: "zh-CN" },
+    ChineseTraditional: { value: 0, name: "zh-TW" },
+    Croatian: { value: 0, name: "hr" },
+    Czech: { value: 0, name: "cs" },
+    Danish: { value: 0, name: "da" },
+    Dutch: { value: 0, name: "nl" },
+    Esperanto: { value: 0, name: "eo" },
+    Estonian: { value: 0, name: "et" },
+    Filipino: { value: 0, name: "tl" },
+    Finnish: { value: 0, name: "fi" },
+    French: { value: 0, name: "fr" },
+    Galician: { value: 0, name: "gl" },
+    Georgian: { value: 0, name: "ka" },
+    German: { value: 0, name: "de" },
+    Greek: { value: 0, name: "el" },
+    Gujarati: { value: 0, name: "gu" },
+    HaitianCreole: { value: 0, name: "ht" },
+    Hausa: { value: 0, name: "ha" },
+    Hebrew: { value: 0, name: "iw" },
+    Hindi: { value: 0, name: "hi" },
+    Hmong: { value: 0, name: "hmn", },
+    Hungarian: { value: 0, name: "hu" },
+    Icelandic: { value: 0, name: "is" },
+    Igbo: { value: 0, name: "ig" },
+    Indonesian: { value: 0, name: "id" },
+    Irish: { value: 0, name: "ga" },
+    Italian: { value: 0, name: "it" },
+    Japanese: { value: 0, name: "ja" },
+    Javanese: { value: 0, name: "jw" },
+    Kannada: { value: 0, name: "kn" },
+    Kazakh: { value: 0, name: "kk" },
+    Khmer: { value: 0, name: "km" },
+    Korean: { value: 0, name: "ko" },
+    Lao: { value: 0, name: "lo" },
+    Latin: { value: 0, name: "la" },
+    Latvian: { value: 0, name: "lv" },
+    Lithuanian: { value: 0, name: "lt" },
+    Macedonian: { value: 0, name: "mk" },
+    Malagasy: { value: 0, name: "mg" },
+    Malay: { value: 0, name: "ms" },
+    Malayalam: { value: 0, name: "ml" },
+    Maltese: { value: 0, name: "mt" },
+    Maori: { value: 0, name: "mi" },
+    Marathi: { value: 0, name: "mr" },
+    Mongolian: { value: 0, name: "mn" },
+    Myanmar: { value: 0, name: "my" },
+    Nepali: { value: 0, name: "ne" },
+    Norwegian: { value: 0, name: "no" },
+    Persian: { value: 0, name: "fa" },
+    Polish: { value: 0, name: "pl" },
+    Punjabi: { value: 0, name: "ma" },
+    Romanian: { value: 0, name: "ro" },
+    Russian: { value: 0, name: "ru" },
+    Serbian: { value: 0, name: "sr" },
+    Sesotho: { value: 0, name: "st" },
+    Sinhala: { value: 0, name: "si" },
+    Slovak: { value: 0, name: "sk" },
+    Slovenian: { value: 0, name: "sl" },
+    Somali: { value: 0, name: "so" },
+    Sudanese: { value: 0, name: "su" },
+    Swahili: { value: 0, name: "sw" },
+    Swedish: { value: 0, name: "sv" },
+    Tajik: { value: 0, name: "tg" },
+    Tamil: { value: 0, name: "ta" },
+    Telugu: { value: 0, name: "te" },
+    Thai: { value: 0, name: "th" },
+    Turkish: { value: 0, name: "tr" },
+    Ukrainian: { value: 0, name: "uk" },
+    Urdu: { value: 0, name: "ur" },
+    Uzbek: { value: 0, name: "uz" },
+    Vietnamese: { value: 0, name: "vi" },
+    Welsh: { value: 0, name: "cy" },
+    Yiddish: { value: 0, name: "yi" },
+    Yoruba: { value: 0, name: "yo" },
+    Zulu: { value: 0, name: "zu" }
+}
+
