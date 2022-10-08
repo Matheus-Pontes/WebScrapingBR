@@ -1,10 +1,5 @@
 # WebScrapingBR
-- Web scraping da tabela do brasileirão os 5 primeiros colocados
-
-## Tecnologias
-- C# 
-- .NET 6
-- Selenium
+- Web scraping da tabela do brasileirão os 5 primeiros colocados e suas pontuações.
 
 ## Funcionamento
 - A partir do selenium fazemos uma consulta ao link da tabela do brasileirão na WEB.
@@ -13,6 +8,13 @@
 
 ## Para se divertir 
 - Conectar a aplicação a um banco de dados.
+    - No projeto foi usado o SQL server
 - Criar uma tabela com as colunas pré-definidas a partir da classe Model/Brasileirao.cs
 - Para rodar no console
-    - ` dotnet run `
+    - ` dotnet build` - para criar as dll
+    - ` dotnet run ` - para rodar o projeto
+
+## Tecnologias
+- C# 
+- .NET 6
+- Selenium
